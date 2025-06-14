@@ -1,5 +1,8 @@
 package io.github.nowipi.ffm;
 
+import io.github.nowipi.ffm.processor.Function;
+import io.github.nowipi.ffm.processor.Library;
+
 import java.lang.foreign.MemorySegment;
 
 @Library("user32")

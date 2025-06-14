@@ -1,24 +1,15 @@
-package io.github.nowipi.ffm;
+package io.github.nowipi.ffm.processor;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
 import java.io.IOException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-@SupportedAnnotationTypes("io.github.nowipi.ffm.Library")
+@SupportedAnnotationTypes("io.github.nowipi.ffm.processor.Library")
 @SupportedSourceVersion(SourceVersion.RELEASE_24)
 public final class FFMProcessor extends AbstractProcessor {
 

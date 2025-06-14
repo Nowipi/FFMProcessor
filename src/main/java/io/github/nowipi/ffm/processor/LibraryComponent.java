@@ -1,4 +1,4 @@
-package io.github.nowipi.ffm;
+package io.github.nowipi.ffm.processor;
 
 import java.lang.annotation.*;
 

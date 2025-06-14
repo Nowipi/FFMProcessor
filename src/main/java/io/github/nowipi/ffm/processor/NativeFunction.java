@@ -1,4 +1,4 @@
-package io.github.nowipi.ffm;
+package io.github.nowipi.ffm.processor;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.stream.Collectors;

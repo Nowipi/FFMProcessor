@@ -1,4 +1,4 @@
-package io.github.nowipi.ffm;
+package io.github.nowipi.ffm.processor;
 
 /**
  * Used to map a method to a native function for libraries.
@@ -12,4 +12,5 @@ public @interface Function {
      * @return the function's native name
      */
     String value();
+    String charset() default "UTF-8";
 }
