@@ -30,4 +30,17 @@ final class LibCTest {
             user32.messageBox(MemorySegment.NULL, text, title, 0x00000003L);
         }
     }
+
+    @Test
+    public void writeTest() {
+        LibC libC = new LibCImpl();
+        try(var arena = Arena.ofConfined()) {
+            MemorySegment file = libC.fopen(arena.allocateFrom("file-does-not-exist"), arena.allocateFrom("r"));
+            if (file.address() == 0) {
+                System.out.println(libC.strerror(libC.errno()).reinterpret(Long.MAX_VALUE).getString(0));
+            } else {
+                System.out.println("no error has occurred");
+            }
+        }
+    }
 }

@@ -2,7 +2,7 @@ package io.github.nowipi.ffm;
 
 import javax.lang.model.element.ExecutableElement;
 
-record VariableCapture(Capture annotation, ExecutableElement javaDeclaration) implements AnnotatedLibraryComponent<Capture> {
+record VariableCapture(CaptureState annotation, ExecutableElement javaDeclaration) {
 
     public String handleName() {
         return annotation.value() + "Handle";
@@ -10,5 +10,13 @@ record VariableCapture(Capture annotation, ExecutableElement javaDeclaration) im
 
     public String nativeName() {
         return annotation.value();
+    }
+
+    public String javaType() {
+        return javaDeclaration.getReturnType().toString();
+    }
+
+    public String javaName() {
+        return javaDeclaration.getSimpleName().toString();
     }
 }

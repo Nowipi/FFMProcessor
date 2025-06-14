@@ -1,16 +1,50 @@
 package io.github.nowipi.ffm;
 
 import javax.lang.model.element.ExecutableElement;
+import java.util.stream.Collectors;
 
-record NativeFunction(Function annotation, ExecutableElement javaDeclaration) implements AnnotatedLibraryComponent<Function> {
+class NativeFunction {
 
-    @Override
+    private final NativeLibraryInterface library;
+    private final Function annotation;
+    private final ExecutableElement javaDeclaration;
+
+    public NativeFunction(NativeLibraryInterface library, Function annotation, ExecutableElement javaDeclaration) {
+        this.library = library;
+        this.annotation = annotation;
+        this.javaDeclaration = javaDeclaration;
+    }
+
     public String handleName() {
         return annotation.value() + "Handle";
     }
 
-    @Override
     public String nativeName() {
         return annotation.value();
+    }
+
+    public String functionDescriptorLayout() {
+        String parameters = javaDeclaration.getParameters().stream()
+                .map(e -> library.typeToValueLayout(e.asType()))
+                .collect(Collectors.joining(", "));
+        return library.typeToValueLayout(javaDeclaration.getReturnType()) + ", " + parameters;
+    }
+
+    public String javaReturnType() {
+        return javaDeclaration.getReturnType().toString();
+    }
+
+    public String javaParameterNames() {
+        return javaDeclaration.getParameters().toString();
+    }
+
+    public String javaName() {
+        return javaDeclaration.getSimpleName().toString();
+    }
+
+    public String javaParameterTypedNames() {
+        return javaDeclaration.getParameters().stream()
+                .map(v -> v.asType().toString() + " " + v.getSimpleName().toString())
+                .collect(Collectors.joining(", "));
     }
 }
