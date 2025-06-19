@@ -1,5 +1,7 @@
 package io.github.nowipi.ffm.processor;
 
+import io.github.nowipi.ffm.processor.annotations.Function;
+
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeKind;
 import java.util.stream.Collectors;

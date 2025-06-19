@@ -1,5 +1,8 @@
 package io.github.nowipi.ffm.processor;
 
+import io.github.nowipi.ffm.processor.annotations.Capture;
+import io.github.nowipi.ffm.processor.annotations.Function;
+
 import javax.lang.model.element.ExecutableElement;
 
 final class CapturingNativeMethod extends NativeMethod implements Capturing {

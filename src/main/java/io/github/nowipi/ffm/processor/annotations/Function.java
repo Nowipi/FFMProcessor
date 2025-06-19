@@ -1,4 +1,4 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.annotations;
 
 /**
  * Used to map a method to a native function for libraries.

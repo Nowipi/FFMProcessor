@@ -1,5 +1,10 @@
 package io.github.nowipi.ffm.processor;
 
+import io.github.nowipi.ffm.processor.annotations.Capture;
+import io.github.nowipi.ffm.processor.annotations.CaptureState;
+import io.github.nowipi.ffm.processor.annotations.Function;
+import io.github.nowipi.ffm.processor.annotations.Library;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -40,10 +45,11 @@ final class NativeLibraryInterface {
                 Function functionAnnotation = enclosed.getAnnotation(Function.class);
                 Capture captureAnnotation = enclosed.getAnnotation(Capture.class);
 
-                ExecutableElement functionElement = (ExecutableElement) enclosed;
-                boolean isMethod = functionElement.getReturnType().getKind() == TypeKind.VOID;
-
                 if (functionAnnotation != null) {
+
+                    ExecutableElement functionElement = (ExecutableElement) enclosed;
+                    boolean isMethod = functionElement.getReturnType().getKind() == TypeKind.VOID;
+
                     if (captureAnnotation != null) {
                         if (isMethod) {
                             functions.add(new CapturingNativeMethod(this, functionAnnotation, (ExecutableElement) enclosed, captureAnnotation));

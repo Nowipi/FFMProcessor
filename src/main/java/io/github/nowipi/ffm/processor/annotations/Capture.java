@@ -1,4 +1,4 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.annotations;
 
 /**
  * Marks a native function as one that will capture a native variable.

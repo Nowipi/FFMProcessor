@@ -1,5 +1,7 @@
 package io.github.nowipi.ffm.processor;
 
+import io.github.nowipi.ffm.processor.annotations.Library;
+
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -9,7 +11,12 @@ import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.Set;
 
-@SupportedAnnotationTypes("io.github.nowipi.ffm.processor.Library")
+@SupportedAnnotationTypes({
+        "io.github.nowipi.ffm.processor.annotations.Library",
+        "io.github.nowipi.ffm.processor.annotations.Function",
+        "io.github.nowipi.ffm.processor.annotations.Capture",
+        "io.github.nowipi.ffm.processor.annotations.CaptureState"
+})
 @SupportedSourceVersion(SourceVersion.RELEASE_24)
 public final class FFMProcessor extends AbstractProcessor {
 

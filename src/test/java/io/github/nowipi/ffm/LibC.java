@@ -2,10 +2,10 @@ package io.github.nowipi.ffm;
 
 
 
-import io.github.nowipi.ffm.processor.Capture;
-import io.github.nowipi.ffm.processor.CaptureState;
-import io.github.nowipi.ffm.processor.Function;
-import io.github.nowipi.ffm.processor.Library;
+import io.github.nowipi.ffm.processor.annotations.Capture;
+import io.github.nowipi.ffm.processor.annotations.CaptureState;
+import io.github.nowipi.ffm.processor.annotations.Function;
+import io.github.nowipi.ffm.processor.annotations.Library;
 
 import java.lang.foreign.MemorySegment;
 

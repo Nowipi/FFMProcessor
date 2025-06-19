@@ -1,4 +1,4 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.annotations;
 
 /**
  * Represents a variable that will be captured when using @Capture.
