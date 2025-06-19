@@ -4,6 +4,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -37,12 +38,25 @@ final class NativeLibraryInterface {
 
             {
                 Function functionAnnotation = enclosed.getAnnotation(Function.class);
-                Capture captureStateAnnotation = enclosed.getAnnotation(Capture.class);
+                Capture captureAnnotation = enclosed.getAnnotation(Capture.class);
+
+                ExecutableElement functionElement = (ExecutableElement) enclosed;
+                boolean isMethod = functionElement.getReturnType().getKind() == TypeKind.VOID;
+
                 if (functionAnnotation != null) {
-                    if (captureStateAnnotation != null) {
-                        functions.add(new CaptureStateNativeFunction(this, functionAnnotation, (ExecutableElement) enclosed, captureStateAnnotation));
+                    if (captureAnnotation != null) {
+                        if (isMethod) {
+                            functions.add(new CapturingNativeMethod(this, functionAnnotation, (ExecutableElement) enclosed, captureAnnotation));
+                        } else {
+                            functions.add(new CapturingNativeFunction(this, functionAnnotation, (ExecutableElement) enclosed, captureAnnotation));
+                        }
+
                     } else {
-                        functions.add(new NativeFunction(this, functionAnnotation, (ExecutableElement) enclosed));
+                        if (isMethod) {
+                            functions.add(new NativeMethod(this, functionAnnotation, (ExecutableElement) enclosed));
+                        } else {
+                            functions.add(new NativeFunction(this, functionAnnotation, (ExecutableElement) enclosed));
+                        }
                     }
                 }
             }

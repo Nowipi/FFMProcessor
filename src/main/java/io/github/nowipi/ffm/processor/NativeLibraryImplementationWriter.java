@@ -159,7 +159,11 @@ final class NativeLibraryImplementationWriter {
             writer.write("      FunctionDescriptor ");
             String descriptorName = nativeFunction.nativeName() + "Descriptor";
             writer.write(descriptorName);
-            writer.write(" = FunctionDescriptor.of(");
+            if (nativeFunction instanceof NativeMethod) {
+                writer.write(" = FunctionDescriptor.ofVoid(");
+            } else {
+                writer.write(" = FunctionDescriptor.of(");
+            }
             writer.write(nativeFunction.functionDescriptorLayout());
             writer.write(");\n      ");
 
@@ -169,7 +173,7 @@ final class NativeLibraryImplementationWriter {
             writer.write("\").orElseThrow(), ");
             writer.write(descriptorName);
 
-            if (nativeFunction instanceof CaptureStateNativeFunction captured) {
+            if (nativeFunction instanceof Capturing captured) {
                 writer.write(", Linker.Option.captureCallState(\"");
                 writer.write(captured.capturedStateName());
                 writer.write("\")");
@@ -194,12 +198,15 @@ final class NativeLibraryImplementationWriter {
 
             writer.write(") {\n     ");
 
-            writer.write("  try { return (");
-            writer.write(javaReturnType);
-            writer.write(") ");
+            writer.write("  try { ");
+            if (!(nativeFunction instanceof NativeMethod _)) {
+                writer.write("return (");
+                writer.write(javaReturnType);
+                writer.write(") ");
+            }
             writer.write(nativeFunction.handleName());
             writer.write(".invokeExact(");
-            if (nativeFunction instanceof CaptureStateNativeFunction) {
+            if (nativeFunction instanceof Capturing) {
                 writer.write("capturedState,");
             }
             writer.write(nativeFunction.javaParameterNames());
@@ -222,6 +229,7 @@ final class NativeLibraryImplementationWriter {
             writer.write("() {\n        return (");
             writer.write(javaType);
             writer.write(") ");
+
             writer.write(capture.handleName());
             writer.write(".get(");
             writer.write("capturedState, 0);\n  }\n");

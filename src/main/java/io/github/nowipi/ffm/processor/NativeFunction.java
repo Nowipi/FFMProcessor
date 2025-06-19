@@ -3,11 +3,11 @@ package io.github.nowipi.ffm.processor;
 import javax.lang.model.element.ExecutableElement;
 import java.util.stream.Collectors;
 
-class NativeFunction {
+sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
 
-    private final NativeLibraryInterface library;
+    protected final NativeLibraryInterface library;
     private final Function annotation;
-    private final ExecutableElement javaDeclaration;
+    protected final ExecutableElement javaDeclaration;
 
     public NativeFunction(NativeLibraryInterface library, Function annotation, ExecutableElement javaDeclaration) {
         this.library = library;
