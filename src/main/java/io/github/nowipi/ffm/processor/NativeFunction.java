@@ -26,6 +26,9 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
     }
 
     public String functionDescriptorLayout() {
+        if (javaDeclaration.getParameters().isEmpty()) {
+            return library.typeToValueLayout(javaDeclaration.getReturnType());
+        }
         String parameters = javaDeclaration.getParameters().stream()
                 .map(e -> library.typeToValueLayout(e.asType()))
                 .collect(Collectors.joining(", "));

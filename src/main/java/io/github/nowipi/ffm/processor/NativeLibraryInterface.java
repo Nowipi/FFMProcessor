@@ -9,6 +9,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -35,12 +36,18 @@ final class NativeLibraryInterface {
 
         functions = new ArrayList<>();
         captures = new ArrayList<>();
-        findLibraryComponents();
+
+        findLibraryComponents(interfaceElement);
+        for (TypeMirror extended : interfaceElement.getInterfaces()) {
+            if (extended instanceof DeclaredType t) {
+                findLibraryComponents((TypeElement) t.asElement());
+            }
+        }
     }
 
-    private void findLibraryComponents() {
-        for (Element enclosed : interfaceElement.getEnclosedElements()) {
-
+    private void findLibraryComponents(TypeElement parentElement) {
+        for (Element enclosed : parentElement.getEnclosedElements()) {
+            System.out.println(enclosed);
             {
                 Function functionAnnotation = enclosed.getAnnotation(Function.class);
                 Capture captureAnnotation = enclosed.getAnnotation(Capture.class);
