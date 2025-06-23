@@ -31,14 +31,18 @@ public final class FFMProcessor extends AbstractProcessor {
         this.messager = env.getMessager();
     }
 
+    private boolean processed;
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        if (processed) {return false;}
+
         for (Element element : roundEnv.getElementsAnnotatedWith(Library.class)) {
+            if (element instanceof TypeElement typed) {
+                processLibrary(typed, element.getAnnotation(Library.class));
 
-            if (element.getKind() != ElementKind.INTERFACE) throw new RuntimeException("Only interfaces can be annotated with @Library");
-
-            processLibrary((TypeElement) element, element.getAnnotation(Library.class));
+            }
         }
+        processed = true;
         return true;
     }
 

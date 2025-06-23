@@ -18,11 +18,15 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
     }
 
     public String handleName() {
-        return annotation.value() + "Handle";
+        return nativeName() + "Handle";
     }
 
     public String nativeName() {
-        return annotation.value();
+        String nativeName = annotation.value();
+        if (nativeName.isEmpty()) {
+            nativeName = javaDeclaration.getSimpleName().toString();
+        }
+        return nativeName;
     }
 
     public String functionDescriptorLayout() {

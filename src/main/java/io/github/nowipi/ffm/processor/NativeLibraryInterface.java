@@ -47,7 +47,6 @@ final class NativeLibraryInterface {
 
     private void findLibraryComponents(TypeElement parentElement) {
         for (Element enclosed : parentElement.getEnclosedElements()) {
-            System.out.println(enclosed);
             {
                 Function functionAnnotation = enclosed.getAnnotation(Function.class);
                 Capture captureAnnotation = enclosed.getAnnotation(Capture.class);

@@ -11,6 +11,5 @@ public @interface Function {
      * Represents the name of the native function you are calling.
      * @return the function's native name
      */
-    String value();
-    String charset() default "UTF-8";
+    String value() default "";
 }
