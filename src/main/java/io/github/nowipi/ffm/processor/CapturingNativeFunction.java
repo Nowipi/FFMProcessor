@@ -9,7 +9,7 @@ final class CapturingNativeFunction extends NativeFunction implements Capturing 
 
     private final Capture captureStateAnnotation;
 
-    public CapturingNativeFunction(NativeLibraryInterface library, Function functionAnnotation, ExecutableElement javaDeclaration, Capture captureStateAnnotation) {
+    public CapturingNativeFunction(NativeLibrary library, Function functionAnnotation, ExecutableElement javaDeclaration, Capture captureStateAnnotation) {
         super(library, functionAnnotation, javaDeclaration);
         this.captureStateAnnotation = captureStateAnnotation;
     }

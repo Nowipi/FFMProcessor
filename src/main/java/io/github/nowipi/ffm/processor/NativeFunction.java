@@ -7,11 +7,11 @@ import java.util.stream.Collectors;
 
 sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
 
-    protected final NativeLibraryInterface library;
+    protected final NativeLibrary library;
     private final Function annotation;
     protected final ExecutableElement javaDeclaration;
 
-    public NativeFunction(NativeLibraryInterface library, Function annotation, ExecutableElement javaDeclaration) {
+    public NativeFunction(NativeLibrary library, Function annotation, ExecutableElement javaDeclaration) {
         this.library = library;
         this.annotation = annotation;
         this.javaDeclaration = javaDeclaration;

@@ -1,24 +1,26 @@
 package io.github.nowipi.ffm.processor;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.ExecutableElement;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 final class NativeLibraryImplementationWriter {
 
     private final String implementationClassName;
-    private final NativeLibraryInterface nativeLibraryInterface;
+    private final NativeLibrary nativeLibrary;
 
-    public NativeLibraryImplementationWriter(NativeLibraryInterface nativeLibraryInterface) {
-        this.nativeLibraryInterface = nativeLibraryInterface;
-        this.implementationClassName = nativeLibraryInterface.className() + "Impl";
+    public NativeLibraryImplementationWriter(NativeLibrary nativeLibrary) {
+        this.nativeLibrary = nativeLibrary;
+        this.implementationClassName = nativeLibrary.className() + "Impl";
     }
 
     public void createImplementationClass(Filer filer) throws IOException {
-        JavaFileObject file = filer.createSourceFile(nativeLibraryInterface.packageName() + "." + implementationClassName);
+        JavaFileObject file = filer.createSourceFile(nativeLibrary.packageName() + "." + implementationClassName);
         writeImplementationClass(file);
     }
 
@@ -33,7 +35,7 @@ final class NativeLibraryImplementationWriter {
     }
 
     private void writePackage(Writer writer) throws IOException {
-        writer.write("package " + nativeLibraryInterface.packageName() + ";\n\n");
+        writer.write("package " + nativeLibrary.packageName() + ";\n\n");
     }
 
     private void writeImports(Writer writer) throws IOException {
@@ -45,23 +47,51 @@ final class NativeLibraryImplementationWriter {
         writeClassDeclaration(writer);
         writer.write(" {\n");
 
+        if (nativeLibrary instanceof NativeLibraryClass nativeLibraryClass) {
+            var opt = nativeLibraryClass.constructor();
+            if (opt.isPresent()) {
+                writeMatchingSuperConstructor(writer, opt.get());
+            }
+        }
+
         writeClassBody(writer);
 
         writer.write("}\n");
     }
 
-    private void writeClassDeclaration(Writer writer) throws IOException {
-        writer.write("public class ");
+    private void writeMatchingSuperConstructor(Writer writer, ExecutableElement executableElement) throws IOException {
+        writer.write("  public ");
         writer.write(implementationClassName);
-        writer.write(" implements ");
-        writer.write(nativeLibraryInterface.className());
+        writer.write("(");
+        writer.write(executableElement.getParameters().stream().map(p -> p.asType().toString() + " " + p.getSimpleName().toString()).collect(Collectors.joining(", ")));
+        writer.write(") {\n");
+        writer.write("      super(");
+        writer.write(executableElement.getParameters().toString());
+        writer.write(");\n  }\n");
+    }
+
+    private void writeClassDeclaration(Writer writer) throws IOException {
+        writer.write("public ");
+        if (nativeLibrary.hasVirtualMethods()) {
+            writer.write("abstract ");
+        }
+        writer.write("class ");
+
+        writer.write(implementationClassName);
+        switch (nativeLibrary) {
+            case NativeLibraryInterface _ -> writer.write(" implements ");
+            case NativeLibraryClass _ -> writer.write(" extends ");
+            default -> throw new IllegalStateException("Unexpected value: " + nativeLibrary);
+        }
+
+        writer.write(nativeLibrary.className());
     }
 
     private void writeClassBody(Writer writer) throws IOException {
 
         writeAttributes(writer);
 
-        switch (nativeLibraryInterface.loadMethod()) {
+        switch (nativeLibrary.loadMethod()) {
             case STATIC:
                 writeStaticHandleInitialization(writer);
                 break;
@@ -78,14 +108,14 @@ final class NativeLibraryImplementationWriter {
         writeLibraryLookupInitialization(writer);
         writer.write(";\n\n");
 
-        if (!nativeLibraryInterface.captures().isEmpty())
+        if (!nativeLibrary.captures().isEmpty())
             writeCaptureAttributes(writer);
 
         writeMethodHandleAttributes(writer);
     }
 
     private void writeLibraryLookupInitialization(Writer writer) throws IOException {
-        Optional<String> nativeLibraryName = nativeLibraryInterface.nativeLibraryName();
+        Optional<String> nativeLibraryName = nativeLibrary.nativeLibraryName();
         if (nativeLibraryName.isEmpty()) {
             writer.write("linker.defaultLookup()");
         } else {
@@ -101,7 +131,7 @@ final class NativeLibraryImplementationWriter {
     }
 
     private void writeCaptureStateAttributes(Writer writer) throws IOException {
-        for (VariableCapture capture : nativeLibraryInterface.captures()) {
+        for (VariableCapture capture : nativeLibrary.captures()) {
             writer.write("  private static final VarHandle ");
             writer.write(capture.handleName());
             writer.write(";\n");
@@ -111,7 +141,7 @@ final class NativeLibraryImplementationWriter {
     private void writeMethodHandleAttributes(Writer writer) throws IOException {
 
         //handle definitions
-        for (NativeFunction nativeFunction : nativeLibraryInterface.functions()) {
+        for (NativeFunction nativeFunction : nativeLibrary.functions()) {
             writer.write("  private static final MethodHandle ");
             writer.write(nativeFunction.handleName());
             writer.write(";\n");
@@ -122,7 +152,7 @@ final class NativeLibraryImplementationWriter {
     private void writeExplicitHandleInitialization(Writer writer) throws IOException {
 
         //handle definitions
-        for (NativeFunction nativeFunction : nativeLibraryInterface.functions()) {
+        for (NativeFunction nativeFunction : nativeLibrary.functions()) {
             writer.write("  private static MethodHandle ");
             writer.write(nativeFunction.handleName());
             writer.write(";\n");
@@ -141,10 +171,10 @@ final class NativeLibraryImplementationWriter {
 
     private void writeHandleInitializers(Writer writer) throws IOException {
 
-        List<VariableCapture> captures = nativeLibraryInterface.captures();
+        List<VariableCapture> captures = nativeLibrary.captures();
         if (!captures.isEmpty()) {
             writer.write("      var captureStateLayout = Linker.Option.captureStateLayout();\n      capturedState = arena.allocate(captureStateLayout);\n");
-            for (VariableCapture capture : nativeLibraryInterface.captures()) {
+            for (VariableCapture capture : nativeLibrary.captures()) {
                 writer.write("      ");
                 writer.write(capture.handleName());
                 writer.write(" = captureStateLayout.varHandle(MemoryLayout.PathElement.groupElement(\"");
@@ -154,7 +184,7 @@ final class NativeLibraryImplementationWriter {
         }
 
 
-        for (NativeFunction nativeFunction : nativeLibraryInterface.functions()) {
+        for (NativeFunction nativeFunction : nativeLibrary.functions()) {
 
             writer.write("      FunctionDescriptor ");
             String descriptorName = nativeFunction.nativeName() + "Descriptor";
@@ -184,7 +214,7 @@ final class NativeLibraryImplementationWriter {
     }
 
     private void writeMethodImplementations(Writer writer) throws IOException {
-        for (NativeFunction nativeFunction : nativeLibraryInterface.functions()) {
+        for (NativeFunction nativeFunction : nativeLibrary.functions()) {
 
 
             var javaReturnType = nativeFunction.javaReturnType();
@@ -217,7 +247,7 @@ final class NativeLibraryImplementationWriter {
     }
 
     private void writeCaptureImplementations(Writer writer) throws IOException {
-        for (VariableCapture capture : nativeLibraryInterface.captures()) {
+        for (VariableCapture capture : nativeLibrary.captures()) {
 
 
             var javaType = capture.javaType();

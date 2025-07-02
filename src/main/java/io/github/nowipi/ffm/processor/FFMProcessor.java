@@ -34,7 +34,9 @@ public final class FFMProcessor extends AbstractProcessor {
     private boolean processed;
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        if (processed) {return false;}
+        if (processed || roundEnv.processingOver()) {
+            return false;
+        }
 
         for (Element element : roundEnv.getElementsAnnotatedWith(Library.class)) {
             if (element instanceof TypeElement typed) {
@@ -46,9 +48,14 @@ public final class FFMProcessor extends AbstractProcessor {
         return true;
     }
 
-    private void processLibrary(TypeElement interfaceElement, Library annotation) {
+    private void processLibrary(TypeElement typeElement, Library annotation) {
 
-        NativeLibraryImplementationWriter writer = new NativeLibraryImplementationWriter(new NativeLibraryInterface(interfaceElement, annotation, processingEnv));
+        NativeLibrary nativeLibrary = switch (typeElement.getKind()) {
+            case CLASS -> new NativeLibraryClass(typeElement, annotation, processingEnv);
+            case INTERFACE -> new NativeLibraryInterface(typeElement, annotation, processingEnv);
+            default -> throw new IllegalStateException("Only an abstract class or interface can be a native library, this is a: " + typeElement.getKind());
+        };
+        NativeLibraryImplementationWriter writer = new NativeLibraryImplementationWriter(nativeLibrary);
         try {
             writer.createImplementationClass(filer);
         } catch (IOException e) {

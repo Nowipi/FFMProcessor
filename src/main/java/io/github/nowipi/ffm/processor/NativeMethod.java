@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 sealed class NativeMethod extends NativeFunction permits CapturingNativeMethod {
 
-    public NativeMethod(NativeLibraryInterface library, Function annotation, ExecutableElement javaDeclaration) {
+    public NativeMethod(NativeLibrary library, Function annotation, ExecutableElement javaDeclaration) {
         super(library, annotation, javaDeclaration);
         if (javaDeclaration.getReturnType().getKind() != TypeKind.VOID) {
             throw new IllegalArgumentException("Native methods can not return anything. Expected return type: void, but got: " +  javaDeclaration.getReturnType());
