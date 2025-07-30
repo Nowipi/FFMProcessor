@@ -104,7 +104,7 @@ final class NativeLibraryImplementationWriter {
     }
 
     private void writeAttributes(Writer writer) throws IOException {
-        writer.write("  private static final Arena arena = Arena.global();\n  private static final Linker linker = Linker.nativeLinker();\n  private static final SymbolLookup lookup = ");
+        writer.write("  protected static final Arena arena = Arena.global();\n  protected static final Linker linker = Linker.nativeLinker();\n  protected static final SymbolLookup lookup = ");
         writeLibraryLookupInitialization(writer);
         writer.write(";\n\n");
 
