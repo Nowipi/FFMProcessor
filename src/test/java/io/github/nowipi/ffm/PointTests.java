@@ -1,8 +1,8 @@
 package io.github.nowipi.ffm;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+
+import java.lang.foreign.Arena;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -15,16 +15,24 @@ public class PointTests {
         pointLib = new PointLibraryImpl();
     }
 
+    @AfterEach
+    void tearDown() {
+        arena.close();
+    }
+
+    Arena arena;
     Point a;
     Point b;
 
     @BeforeEach
     void setUp() {
-        a = new Point();
+        arena = Arena.ofConfined();
+
+        a = new Point(arena);
         a.setX(10);
         a.setY(5);
 
-        b = new Point();
+        b = new Point(arena);
         b.setX(1);
         b.setY(2);
     }

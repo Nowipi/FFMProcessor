@@ -50,7 +50,7 @@ public class StructWriter {
         writeStaticInitialization(writer);
 
 
-        writer.write("private final MemorySegment nativeSegment;\nprivate final Arena instanceArena;\n");
+        writer.write("private final MemorySegment nativeSegment;\n");
 
         writeConstructors(writer);
 
@@ -98,23 +98,20 @@ public class StructWriter {
     }
 
     private void writeConstructors(Writer writer) throws IOException {
-        writer.write("public ");
-        writer.write(fileData.getClassName());
-        writer.write("() {\nthis(Arena.ofAuto());\n}\n");
 
         writer.write("public ");
         writer.write(fileData.getClassName());
-        writer.write("(Arena arena) {\nthis(arena, arena.allocate(LAYOUT));\n}\n");
+        writer.write("(Arena arena) {\nthis(arena.allocate(LAYOUT));\n}\n");
 
         writer.write("private ");
         writer.write(fileData.getClassName());
-        writer.write("(Arena arena, MemorySegment nativeSegment) {\ninstanceArena = arena;\nthis.nativeSegment = nativeSegment;\n}\n");
+        writer.write("(MemorySegment segment) {\nnativeSegment = segment;\n}\n");
 
         writer.write("public static ");
         writer.write(fileData.getClassName());
         writer.write(" from(MemorySegment nativeSegment) {\nreturn new ");
         writer.write(fileData.getClassName());
-        writer.write("(null, nativeSegment);\n}\n");
+        writer.write("(nativeSegment);\n}\n");
     }
 
     private void writeMemberGetters(Writer writer) throws IOException {
