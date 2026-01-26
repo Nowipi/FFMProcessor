@@ -1,6 +1,7 @@
 package io.github.nowipi.ffm.processor;
 
 import io.github.nowipi.ffm.processor.annotations.Function;
+import io.github.nowipi.ffm.processor.annotations.Value;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeKind;
@@ -18,12 +19,12 @@ sealed class NativeMethod extends NativeFunction permits CapturingNativeMethod {
     @Override
     public String functionDescriptorLayout() {
         return javaDeclaration.getParameters().stream()
-                .map(e -> library.typeToValueLayout(e.asType()))
+                .map(e -> library.typeToValueLayout(e.asType(), e.getAnnotation(Value.class)))
                 .collect(Collectors.joining(", "));
     }
 
     @Override
-    public String javaReturnType() {
+    public String javaReturnTypeName() {
         return "void";
     }
 

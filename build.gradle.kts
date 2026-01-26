@@ -9,6 +9,12 @@ plugins {
 group = "io.github.nowipi"
 version = "1.1-SNAPSHOT"
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
 signing {
     useInMemoryPgpKeys(
         project.findProperty("signing.keyId") as String?,
@@ -58,6 +64,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testAnnotationProcessor(sourceSets.main.get().output)
 }
 

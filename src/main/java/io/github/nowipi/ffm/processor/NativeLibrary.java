@@ -1,9 +1,6 @@
 package io.github.nowipi.ffm.processor;
 
-import io.github.nowipi.ffm.processor.annotations.Capture;
-import io.github.nowipi.ffm.processor.annotations.CaptureState;
-import io.github.nowipi.ffm.processor.annotations.Function;
-import io.github.nowipi.ffm.processor.annotations.Library;
+import io.github.nowipi.ffm.processor.annotations.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
@@ -149,13 +146,16 @@ public sealed class NativeLibrary permits NativeLibraryInterface, NativeLibraryC
         return Collections.unmodifiableList(captures);
     }
 
-    public String typeToValueLayout(TypeMirror type) {
+    public String typeToValueLayout(TypeMirror type, Value value) {
         if (type.getKind().isPrimitive()) {
             return "ValueLayout.JAVA_" + (type.getKind().name());
-        } else if (types.isSameType(type,  elements.getTypeElement("java.lang.foreign.MemorySegment").asType())) {
-            return "ValueLayout.ADDRESS";
+        } else {
+            if (value == null) {
+                return "ValueLayout.ADDRESS";
+            }
+            return type + ".LAYOUT";
+
         }
-        throw new IllegalArgumentException("Unsupported kind: " + type);
     }
 
     public boolean hasVirtualMethods() {

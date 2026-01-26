@@ -2,9 +2,11 @@ package io.github.nowipi.ffm.processor;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeKind;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -217,9 +219,9 @@ final class NativeLibraryImplementationWriter {
         for (NativeFunction nativeFunction : nativeLibrary.functions()) {
 
 
-            var javaReturnType = nativeFunction.javaReturnType();
+            String javaReturnTypeName = nativeFunction.javaReturnTypeName();
             writer.write("  @Override\n  public ");
-            writer.write(javaReturnType);
+            writer.write(javaReturnTypeName);
             writer.write(" ");
             writer.write(nativeFunction.javaName());
 
@@ -230,9 +232,18 @@ final class NativeLibraryImplementationWriter {
 
             writer.write("  try { ");
             if (!(nativeFunction instanceof NativeMethod _)) {
-                writer.write("return (");
-                writer.write(javaReturnType);
-                writer.write(") ");
+
+                writer.write("return ");
+                if (nativeFunction.javaReturnType().getKind() == TypeKind.ERROR) {
+                    writer.write(javaReturnTypeName);
+                    writer.write(".from((MemorySegment) ");
+                } else {
+                    writer.write("(");
+                    writer.write(javaReturnTypeName);
+                    writer.write(") ");
+                }
+
+
             }
             writer.write(nativeFunction.handleName());
             writer.write(".invokeExact(");
@@ -241,7 +252,11 @@ final class NativeLibraryImplementationWriter {
             }
             writer.write(nativeFunction.javaParameterNames());
 
-            writer.write(");} catch (Throwable e) { throw new RuntimeException(e); }\n");
+            writer.write(")");
+            if (nativeFunction.javaReturnType().getKind() == TypeKind.ERROR) {
+                writer.write(")");
+            }
+            writer.write(";} catch (Throwable e) { throw new RuntimeException(e); }\n");
             writer.write("  }\n");
         }
     }

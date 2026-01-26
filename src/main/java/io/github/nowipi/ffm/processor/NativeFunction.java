@@ -1,8 +1,11 @@
 package io.github.nowipi.ffm.processor;
 
 import io.github.nowipi.ffm.processor.annotations.Function;
+import io.github.nowipi.ffm.processor.annotations.Value;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import java.util.stream.Collectors;
 
 sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
@@ -31,20 +34,32 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
 
     public String functionDescriptorLayout() {
         if (javaDeclaration.getParameters().isEmpty()) {
-            return library.typeToValueLayout(javaDeclaration.getReturnType());
+            return library.typeToValueLayout(javaDeclaration.getReturnType(), javaDeclaration.getAnnotation(Value.class));
         }
         String parameters = javaDeclaration.getParameters().stream()
-                .map(e -> library.typeToValueLayout(e.asType()))
+                .map(e -> library.typeToValueLayout(e.asType(), e.getAnnotation(Value.class)))
                 .collect(Collectors.joining(", "));
-        return library.typeToValueLayout(javaDeclaration.getReturnType()) + ", " + parameters;
+        return library.typeToValueLayout(javaDeclaration.getReturnType(), javaDeclaration.getAnnotation(Value.class)) + ", " + parameters;
     }
 
-    public String javaReturnType() {
-        return javaDeclaration.getReturnType().toString();
+    public String javaReturnTypeName() {
+        TypeMirror returnType = javaDeclaration.getReturnType();
+        return returnType.toString();
+    }
+
+    public TypeMirror javaReturnType() {
+        return javaDeclaration.getReturnType();
     }
 
     public String javaParameterNames() {
-        return javaDeclaration.getParameters().toString();
+        return javaDeclaration.getParameters().stream()
+                .map(v -> {
+                    if (v.asType().getKind() == TypeKind.ERROR) {
+                        return v.getSimpleName().toString() + ".getNativeSegment()";
+                    }
+                    return v.getSimpleName().toString();
+                })
+                .collect(Collectors.joining(", "));
     }
 
     public String javaName() {
