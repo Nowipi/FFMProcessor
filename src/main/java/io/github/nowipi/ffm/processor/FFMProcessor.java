@@ -61,7 +61,7 @@ public final class FFMProcessor extends AbstractProcessor {
         try {
             writer.createStructClass(filer);
         } catch (IOException e) {
-            messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate struct: " + structAnnotation.value() + " " + e.getMessage());
+            messager.printError("Failed to generate struct: " + structAnnotation.value() + " " + e.getMessage());
         }
     }
 

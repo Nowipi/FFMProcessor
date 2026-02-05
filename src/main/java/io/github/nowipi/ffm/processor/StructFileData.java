@@ -19,7 +19,6 @@ public class StructFileData {
 
     public record MemberData(String offsetName, String name, String layout, String javaTypeName) { }
 
-    private final Elements elements;
     private final List<MemberData> members;
     private final String className;
     private final String packageName;
@@ -30,7 +29,7 @@ public class StructFileData {
             throw new IllegalArgumentException("Types annotated with Struct need to be of the kind: INTERFACE");
         }
 
-        elements = env.getElementUtils();
+        Elements elements = env.getElementUtils();
 
         packageName = elements.getPackageOf(annotatedElement).getQualifiedName().toString();
         className = annotation.value();
@@ -42,6 +41,11 @@ public class StructFileData {
 
             Address address = member.getAnnotation(Address.class);
             ExecutableElement functionElement = (ExecutableElement) member;
+
+            if (!functionElement.getParameters().isEmpty()) {
+                throw new IllegalArgumentException("Function cannot have parameters " + functionElement.getEnclosingElement() + "#" + functionElement);
+            }
+
             String name = functionElement.getSimpleName().toString();
 
             String layout;
