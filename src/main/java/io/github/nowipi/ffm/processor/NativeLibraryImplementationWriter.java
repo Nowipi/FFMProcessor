@@ -6,6 +6,7 @@ import javax.lang.model.type.TypeKind;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.URL;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +42,7 @@ final class NativeLibraryImplementationWriter {
     }
 
     private void writeImports(Writer writer) throws IOException {
-        writer.write("import java.lang.foreign.*;\nimport java.lang.invoke.MethodHandle;\nimport java.lang.invoke.VarHandle;\n\n");
+        writer.write("import java.lang.foreign.*;\nimport java.lang.invoke.MethodHandle;\nimport java.lang.invoke.VarHandle;\nimport java.net.URL;\n\n");
     }
 
     private void writeImplementation(Writer writer) throws IOException {
@@ -106,9 +107,9 @@ final class NativeLibraryImplementationWriter {
     }
 
     private void writeAttributes(Writer writer) throws IOException {
-        writer.write("  protected static final Arena arena = Arena.global();\n  protected static final Linker linker = Linker.nativeLinker();\n  protected static final SymbolLookup lookup = ");
+        writer.write("  protected static final Arena arena = Arena.global();\n  protected static final Linker linker = Linker.nativeLinker();\n  protected static final SymbolLookup lookup");
         writeLibraryLookupInitialization(writer);
-        writer.write(";\n\n");
+        writer.write("\n");
 
         if (!nativeLibrary.captures().isEmpty())
             writeCaptureAttributes(writer);
@@ -119,12 +120,9 @@ final class NativeLibraryImplementationWriter {
     private void writeLibraryLookupInitialization(Writer writer) throws IOException {
         Optional<String> nativeLibraryName = nativeLibrary.nativeLibraryName();
         if (nativeLibraryName.isEmpty()) {
-            writer.write("linker.defaultLookup()");
-        } else {
-            writer.write("SymbolLookup.libraryLookup(\"");
-            writer.write(nativeLibraryName.get());
-            writer.write("\", arena)");
+            writer.write(" = linker.defaultLookup()");
         }
+        writer.write(";\n");
     }
 
     private void writeCaptureAttributes(Writer writer) throws IOException {
@@ -167,6 +165,20 @@ final class NativeLibraryImplementationWriter {
 
     private void writeStaticHandleInitialization(Writer writer) throws IOException {
         writer.write("\n  static {\n");
+
+        Optional<String> nativeLibraryOpt = nativeLibrary.nativeLibraryName();
+        if (nativeLibraryOpt.isPresent()) {
+            String nativeLibraryName = nativeLibraryOpt.get();
+
+            writer.write("\tURL resource = ");
+            writer.write(nativeLibrary.className());
+            writer.write(".class.getResource(\"");
+            writer.write(nativeLibraryName);
+            writer.write("\");\n\tString path = \"");
+            writer.write(nativeLibraryName);
+            writer.write("\";\n\tif (resource != null) {\n\t\tpath = resource.getPath().substring(1);\n\t}\n\tlookup = SymbolLookup.libraryLookup(path, arena);\n");
+        }
+
         writeHandleInitializers(writer);
         writer.write("  }\n");
     }

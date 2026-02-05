@@ -70,4 +70,5 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    jvmArgs("-Djava.library.path=C:\\Users\\noahu\\IdeaProjects\\FFMProcessor\\src\\test\\resources")
 }
