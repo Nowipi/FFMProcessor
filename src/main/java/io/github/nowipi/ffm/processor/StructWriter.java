@@ -116,33 +116,64 @@ public class StructWriter {
 
     private void writeMemberGetters(Writer writer) throws IOException {
         for (StructFileData.MemberData member : fileData.getMembers()) {
-            writer.write("public ");
-            writer.write(member.javaTypeName());
-            writer.write(" get");
-            writer.write(capitalize(member.name()));
-            writer.write("() {\nreturn nativeSegment.get(");
-            writer.write(member.layout());
-            writer.write(", ");
-            writer.write(member.offsetName());
-            writer.write(");\n}\n");
+
+            if (member.isStruct()) {
+                writer.write("public ");
+                writer.write(member.javaTypeName());
+                writer.write(" get");
+                writer.write(capitalize(member.name()));
+                writer.write("() {\nreturn ");
+                writer.write(member.javaTypeName());
+                writer.write(".from(nativeSegment.asSlice(");
+                writer.write(member.offsetName());
+                writer.write(", ");
+                writer.write(member.layout());
+                writer.write("));\n}\n");
+            } else {
+                writer.write("public ");
+                writer.write(member.javaTypeName());
+                writer.write(" get");
+                writer.write(capitalize(member.name()));
+                writer.write("() {\nreturn nativeSegment.get(");
+                writer.write(member.layout());
+                writer.write(", ");
+                writer.write(member.offsetName());
+                writer.write(");\n}\n");
+            }
         }
     }
 
     private void writeMemberSetters(Writer writer) throws IOException {
         for (StructFileData.MemberData member : fileData.getMembers()) {
-            writer.write("public void set");
-            writer.write(capitalize(member.name()));
-            writer.write("(");
-            writer.write(member.javaTypeName());
-            writer.write(" ");
-            writer.write(member.name());
-            writer.write(") {\nnativeSegment.set(");
-            writer.write(member.layout());
-            writer.write(", ");
-            writer.write(member.offsetName());
-            writer.write(", ");
-            writer.write(member.name());
-            writer.write(");\n}\n");
+            if (member.isStruct()) {
+                writer.write("public void set");
+                writer.write(capitalize(member.name()));
+                writer.write("(");
+                writer.write(member.javaTypeName());
+                writer.write(" ");
+                writer.write(member.name());
+                writer.write(") {\nnativeSegment.asSlice(");
+                writer.write(member.offsetName());
+                writer.write(", ");
+                writer.write(member.layout());
+                writer.write(").copyFrom(");
+                writer.write(member.name());
+                writer.write(".getNativeSegment());\n}\n");
+            } else {
+                writer.write("public void set");
+                writer.write(capitalize(member.name()));
+                writer.write("(");
+                writer.write(member.javaTypeName());
+                writer.write(" ");
+                writer.write(member.name());
+                writer.write(") {\nnativeSegment.set(");
+                writer.write(member.layout());
+                writer.write(", ");
+                writer.write(member.offsetName());
+                writer.write(", ");
+                writer.write(member.name());
+                writer.write(");\n}\n");
+            }
         }
     }
 

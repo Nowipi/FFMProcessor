@@ -17,7 +17,11 @@ import java.util.List;
 
 public class StructFileData {
 
-    public record MemberData(String offsetName, String name, String layout, String javaTypeName) { }
+    public record MemberData(String offsetName, String name, String layout, String javaTypeName) {
+        public boolean isStruct() {
+            return layout.contains(".LAYOUT");
+        }
+    }
 
     private final List<MemberData> members;
     private final String className;
@@ -61,14 +65,14 @@ public class StructFileData {
         }
     }
 
-    private String typeToValueLayout(TypeMirror type) {
+    private static String typeToValueLayout(TypeMirror type) {
         if (type.getKind().isPrimitive()) {
             return "ValueLayout.JAVA_" + (type.getKind().name());
         } else if (type.getKind() == TypeKind.DECLARED) {
             DeclaredType declaredType = (DeclaredType) type;
             return declaredType.asElement().getSimpleName() + ".LAYOUT";
         } else {
-            throw new IllegalArgumentException(type + " is not supported.");
+            return type + ".LAYOUT";
         }
     }
 
