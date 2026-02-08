@@ -8,6 +8,8 @@ import io.github.nowipi.ffm.processor.annotations.Value;
 public interface PointLibrary {
 
     @Function(value = "point_add")
-    void pointAdd(Point to, @Value Point value);
+    @Value Point pointAdd(@Value Point a, @Value Point to);
 
+    @Function(value = "point_add_mut")
+    void pointAddMut(Point a, @Value Point to);
 }

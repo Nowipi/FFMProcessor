@@ -258,9 +258,12 @@ final class NativeLibraryImplementationWriter {
 
             }
             writer.write(nativeFunction.handleName());
-            writer.write(".invokeExact(");
+            writer.write(".invoke(");
             if (nativeFunction instanceof Capturing) {
                 writer.write("capturedState,");
+            }
+            if (nativeFunction.hasValueReturn()) {
+                writer.write("arena,");
             }
             writer.write(nativeFunction.javaParameterNames());
 

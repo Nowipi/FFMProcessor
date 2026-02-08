@@ -71,4 +71,8 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
                 .map(v -> v.asType().toString() + " " + v.getSimpleName().toString())
                 .collect(Collectors.joining(", "));
     }
+
+    public boolean hasValueReturn() {
+        return javaDeclaration.getAnnotation(Value.class) != null;
+    }
 }

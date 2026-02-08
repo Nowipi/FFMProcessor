@@ -10,7 +10,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public sealed class NativeLibrary permits NativeLibraryInterface, NativeLibraryClass {
 
