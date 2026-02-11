@@ -6,21 +6,20 @@ import io.github.nowipi.ffm.processor.annotations.Capture;
 import io.github.nowipi.ffm.processor.annotations.CaptureState;
 import io.github.nowipi.ffm.processor.annotations.Function;
 import io.github.nowipi.ffm.processor.annotations.Library;
-
-import java.lang.foreign.MemorySegment;
+import io.github.nowipi.ffm.processor.pointer.Pointer;
 
 @Library
 public interface LibC {
 
     @Function("strlen")
-    int strlen(MemorySegment str);
+    int strlen(Pointer<Byte> str);
 
     @Capture("errno")
     @Function(value = "fopen")
-    MemorySegment fopen(MemorySegment filename, MemorySegment mode);
+    Pointer<Void> fopen(Pointer<Byte> filename, Pointer<Byte> mode);
 
     @Function(value = "strerror")
-    MemorySegment strerror(int errnum);
+    Pointer<Byte> strerror(int errnum);
 
     @CaptureState("errno")
     int errno();
