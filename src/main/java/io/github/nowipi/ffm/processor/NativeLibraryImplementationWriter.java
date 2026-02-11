@@ -246,6 +246,7 @@ final class NativeLibraryImplementationWriter {
             writer.write(") {\n     ");
 
             writer.write("  try { ");
+            boolean structPointer = false;
             if (!(nativeFunction instanceof NativeMethod _)) {
 
                 writer.write("return ");
@@ -253,8 +254,13 @@ final class NativeLibraryImplementationWriter {
                     writer.write(javaReturnTypeName);
                     writer.write(".from((MemorySegment) ");
                 } else if (nativeFunction.hasPointerReturn()) {
+
                     writer.write("new ");
-                    writer.write(nativeFunction.getPointerClass((DeclaredType) nativeFunction.javaReturnType()).toString());
+                    String str = nativeFunction.getPointerClass((DeclaredType) nativeFunction.javaReturnType());
+                    if (str.contains("StructPointer")) {
+                        structPointer = true;
+                    }
+                    writer.write(str);
                     writer.write("((MemorySegment) ");
                 } else {
                     writer.write("(");
@@ -275,6 +281,13 @@ final class NativeLibraryImplementationWriter {
             writer.write(nativeFunction.javaParameterNames());
 
             writer.write(")");
+            if (structPointer) {
+                writer.write("), ");
+                writer.write(((DeclaredType)nativeFunction.javaReturnType()).getTypeArguments().get(0).toString());
+                writer.write(".LAYOUT");
+            } else if (nativeFunction.hasPointerReturn()) {
+                writer.write(")");
+            }
             if (nativeFunction.hasStructReturn() || nativeFunction.hasPointerReturn()) {
                 writer.write(")");
             }

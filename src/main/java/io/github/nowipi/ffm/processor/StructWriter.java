@@ -134,11 +134,21 @@ public class StructWriter {
                 writer.write(member.javaTypeName());
                 writer.write(" get");
                 writer.write(capitalize(member.name()));
-                writer.write("() {\nreturn nativeSegment.get(");
+                writer.write("() {\nreturn ");
+                if (member.isPointer()) {
+                    writer.write("new ");
+                    writer.write(fileData.getPointerClass(member.type()).toString());
+                    writer.write("(");
+                }
+                writer.write("nativeSegment.get(");
                 writer.write(member.layout());
                 writer.write(", ");
                 writer.write(member.offsetName());
-                writer.write(");\n}\n");
+                writer.write(")");
+                if (member.isPointer()) {
+                    writer.write(")");
+                }
+                writer.write(";\n}\n");
             }
         }
     }
@@ -172,6 +182,9 @@ public class StructWriter {
                 writer.write(member.offsetName());
                 writer.write(", ");
                 writer.write(member.name());
+                if (member.isPointer()) {
+                    writer.write(".getNativeSegment()");
+                }
                 writer.write(");\n}\n");
             }
         }

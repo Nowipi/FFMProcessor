@@ -4,14 +4,14 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
-public class IntPointer implements Pointer<Integer> {
+public class IntegerPointer implements Pointer<Integer> {
     private MemorySegment pointerSegment;
 
-    public IntPointer(MemorySegment pointerSegment) {
+    public IntegerPointer(MemorySegment pointerSegment) {
         this.pointerSegment = pointerSegment;
     }
 
-    public IntPointer(Arena arena, int... values) {
+    public IntegerPointer(Arena arena, int... values) {
        this(arena.allocateFrom(ValueLayout.JAVA_INT, values));
     }
 

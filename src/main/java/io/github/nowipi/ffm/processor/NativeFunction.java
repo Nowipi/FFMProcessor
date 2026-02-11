@@ -4,6 +4,7 @@ import io.github.nowipi.ffm.processor.annotations.Function;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -106,16 +107,17 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
         return !types.isSubtype(types.erasure(type), types.erasure(pointerType));
     }
 
-    public DeclaredType getPointerClass(DeclaredType pointerInterfaceType) {
+    public String getPointerClass(DeclaredType pointerInterfaceType) {
         TypeMirror genericType = pointerInterfaceType.getTypeArguments().get(0);
+        if (isStruct(genericType)) {
+            TypeElement found = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.StructPointer");
+            return found.getQualifiedName().toString() + "<>(" + genericType + "::getNativeSegment, " + genericType + "::from, ";
+        }
         if (genericType.getKind() == TypeKind.VOID || types.isSameType(genericType, elements.getTypeElement("java.lang.Void").asType())) {
-            return (DeclaredType) elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.VoidPointer").asType();
+            return elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.VoidPointer").asType().toString() + "(";
         }
         if (types.isSubtype(genericType, elements.getTypeElement("java.lang.Number").asType())) {
-            return (DeclaredType) elements.getTypeElement("io.github.nowipi.ffm.processor.pointer." + ((DeclaredType)genericType).asElement().getSimpleName() + "Pointer").asType();
-        }
-        if (isStruct(genericType)) {
-            return (DeclaredType) elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.StructPointer").asType();
+            return elements.getTypeElement("io.github.nowipi.ffm.processor.pointer." + ((DeclaredType)genericType).asElement().getSimpleName() + "Pointer").asType().toString() + "(";
         }
 
         IO.println(genericType);

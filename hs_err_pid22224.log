@@ -1,0 +1,33 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ff83949067c, pid=22224, tid=14272
+#
+# JRE version: Java(TM) SE Runtime Environment (25.0+37) (build 25+37-LTS-3491)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (25+37-LTS-3491, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, windows-amd64)
+# Problematic frame:
+# C  [ntdll.dll+0xa067c]
+#
+# No core dump will be written. Minidumps are not enabled by default on client versions of Windows
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugreport.java.com/bugreport/crash.jsp
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -Djava.library.path=C:\Users\noahu\IdeaProjects\FFMProcessor\src\test\resources -Dorg.gradle.internal.worker.tmpdir=F:\IdeaProjects\FFMProcessor\build\tmp\test\work -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=US -Duser.language=en -Duser.variant -ea worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Test Executor 49'
+
+Host: Intel(R) Core(TM) i5-8400 CPU @ 2.80GHz, 6 cores, 15G,  Windows 11 , 64 bit Build 22621 (10.0.22621.5415)
+Time: Wed Feb 11 21:18:03 2026 Romance Standard Time elapsed time: 0.713152 seconds (0d 0h 0m 0s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00000262d2327a10):  JavaThread "C1 CompilerThread0" daemon [_thread_in_vm, id=14272, stack(0x000000b0d8400000,0x000000b0d8500000) (1024K)]
+
+
+Current CompileTask:
+C1:713 1959   !   3       java.net.URLClassLoader::defineClass (224 bytes)
+
+Stack: [0x000000b0d8400000,0x000000b0d8500000],  sp=0x000000b0d84fe068,  free space=1016k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
