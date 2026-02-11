@@ -28,8 +28,8 @@ final class LibCTest {
     public void messageBoxTest() {
         User32 user32 = new User32Impl();
         try(var arena = Arena.ofConfined()) {
-            var text = new BytePointer(arena, "Hello World!".getBytes(StandardCharsets.UTF_16LE));
-            var title = new BytePointer(arena, "Hello Title".getBytes(StandardCharsets.UTF_16LE));
+            var text = new BytePointer(arena, "Hello World!\0".getBytes(StandardCharsets.UTF_16LE));
+            var title = new BytePointer(arena, "Hello Title\0".getBytes(StandardCharsets.UTF_16LE));
             user32.messageBox(NULL, text, title, 0x00000003L);
         }
     }

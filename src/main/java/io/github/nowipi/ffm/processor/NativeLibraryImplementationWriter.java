@@ -2,7 +2,10 @@ package io.github.nowipi.ffm.processor;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
@@ -246,9 +249,13 @@ final class NativeLibraryImplementationWriter {
             if (!(nativeFunction instanceof NativeMethod _)) {
 
                 writer.write("return ");
-                if (nativeFunction.javaReturnType().getKind() == TypeKind.ERROR) {
+                if (nativeFunction.hasStructReturn()) {
                     writer.write(javaReturnTypeName);
                     writer.write(".from((MemorySegment) ");
+                } else if (nativeFunction.hasPointerReturn()) {
+                    writer.write("new ");
+                    writer.write(nativeFunction.getPointerClass((DeclaredType) nativeFunction.javaReturnType()).toString());
+                    writer.write("((MemorySegment) ");
                 } else {
                     writer.write("(");
                     writer.write(javaReturnTypeName);
@@ -262,13 +269,13 @@ final class NativeLibraryImplementationWriter {
             if (nativeFunction instanceof Capturing) {
                 writer.write("capturedState,");
             }
-            if (nativeFunction.hasValueReturn()) {
+            if (nativeFunction.hasStructReturn()) {
                 writer.write("arena,");
             }
             writer.write(nativeFunction.javaParameterNames());
 
             writer.write(")");
-            if (nativeFunction.javaReturnType().getKind() == TypeKind.ERROR) {
+            if (nativeFunction.hasStructReturn() || nativeFunction.hasPointerReturn()) {
                 writer.write(")");
             }
             writer.write(";} catch (Throwable e) { throw new RuntimeException(e); }\n");

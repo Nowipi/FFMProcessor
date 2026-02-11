@@ -24,16 +24,17 @@ public sealed class NativeLibrary permits NativeLibraryInterface, NativeLibraryC
     public NativeLibrary(TypeElement typeElement, Library annotation, ProcessingEnvironment env) {
         elements = env.getElementUtils();
         types = env.getTypeUtils();
+
         this.typeElement = typeElement;
         this.annotation = annotation;
 
         functions = new ArrayList<>();
         captures = new ArrayList<>();
 
-        findLibraryComponents(typeElement);
+        findLibraryComponents(typeElement, env);
         for (TypeMirror extended : typeElement.getInterfaces()) {
             if (extended instanceof DeclaredType t) {
-                findLibraryComponents((TypeElement) t.asElement());
+                findLibraryComponents((TypeElement) t.asElement(), env);
             }
         }
         hasVirtualMethods = hasUnimplementedMethods(typeElement, types);
@@ -76,7 +77,7 @@ public sealed class NativeLibrary permits NativeLibraryInterface, NativeLibraryC
     }
 
 
-    private void findLibraryComponents(TypeElement parentElement) {
+    private void findLibraryComponents(TypeElement parentElement, ProcessingEnvironment env) {
         for (Element enclosed : parentElement.getEnclosedElements()) {
             {
                 Function functionAnnotation = enclosed.getAnnotation(Function.class);
@@ -89,16 +90,16 @@ public sealed class NativeLibrary permits NativeLibraryInterface, NativeLibraryC
 
                     if (captureAnnotation != null) {
                         if (isMethod) {
-                            functions.add(new CapturingNativeMethod(this, functionAnnotation, (ExecutableElement) enclosed, captureAnnotation));
+                            functions.add(new CapturingNativeMethod(this, functionAnnotation, (ExecutableElement) enclosed, captureAnnotation, env));
                         } else {
-                            functions.add(new CapturingNativeFunction(this, functionAnnotation, (ExecutableElement) enclosed, captureAnnotation));
+                            functions.add(new CapturingNativeFunction(this, functionAnnotation, (ExecutableElement) enclosed, captureAnnotation, env));
                         }
 
                     } else {
                         if (isMethod) {
-                            functions.add(new NativeMethod(this, functionAnnotation, (ExecutableElement) enclosed));
+                            functions.add(new NativeMethod(this, functionAnnotation, (ExecutableElement) enclosed, env));
                         } else {
-                            functions.add(new NativeFunction(this, functionAnnotation, (ExecutableElement) enclosed));
+                            functions.add(new NativeFunction(this, functionAnnotation, (ExecutableElement) enclosed, env));
                         }
                     }
                 }
@@ -143,18 +144,6 @@ public sealed class NativeLibrary permits NativeLibraryInterface, NativeLibraryC
 
     public List<VariableCapture> captures() {
         return Collections.unmodifiableList(captures);
-    }
-
-    public String typeToValueLayout(TypeMirror type, Value value) {
-        if (type.getKind().isPrimitive()) {
-            return "ValueLayout.JAVA_" + (type.getKind().name());
-        } else {
-            if (value == null) {
-                return "ValueLayout.ADDRESS";
-            }
-            return type + ".LAYOUT";
-
-        }
     }
 
     public boolean hasVirtualMethods() {
