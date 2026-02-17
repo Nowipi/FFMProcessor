@@ -1,6 +1,5 @@
 package io.github.nowipi.ffm;
 
-import io.github.nowipi.ffm.processor.pointer.IntegerPointer;
 import io.github.nowipi.ffm.processor.pointer.Pointer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

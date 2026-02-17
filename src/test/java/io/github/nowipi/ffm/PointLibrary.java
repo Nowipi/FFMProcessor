@@ -7,6 +7,9 @@ import io.github.nowipi.ffm.processor.pointer.Pointer;
 @Library(value = "point.dll")
 public interface PointLibrary {
 
+    @Function(value = "pointNew")
+    Pointer<Point> pointNew(int x, int y);
+
     @Function(value = "point_add")
     Point pointAdd(Point a, Point to);
 
