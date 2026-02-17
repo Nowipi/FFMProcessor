@@ -75,7 +75,7 @@ public final class FFMProcessor extends AbstractProcessor {
 
         var writer = new NativeLibraryImplementationWriter(nativeLibrary);
         try {
-            writer.createImplementationClass(filer);
+            writer.createImplementationClass(filer, annotatedElement);
         } catch (IOException e) {
             messager.printMessage(Diagnostic.Kind.ERROR, "Code generation failed: " + e.getMessage());
         }

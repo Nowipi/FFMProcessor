@@ -1,6 +1,7 @@
 package io.github.nowipi.ffm.processor;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -25,27 +26,21 @@ final class NativeLibraryImplementationWriter {
         this.implementationClassName = nativeLibrary.className() + "Impl";
     }
 
-    public void createImplementationClass(Filer filer) throws IOException {
-        JavaFileObject file = filer.createSourceFile(nativeLibrary.packageName() + "." + implementationClassName);
+    public void createImplementationClass(Filer filer, Element creator) throws IOException {
+        JavaFileObject file = filer.createSourceFile(nativeLibrary.packageName() + "." + implementationClassName, creator);
         writeImplementationClass(file);
     }
 
     private void writeImplementationClass(JavaFileObject file) {
         try (Writer writer = file.openWriter()) {
-            writePackage(writer);
-            writeImports(writer);
+            writer.write("package ");
+            writer.write(nativeLibrary.packageName());
+            writer.write(";\n\n");
+            writer.write("import java.lang.foreign.*;\nimport java.lang.invoke.MethodHandle;\nimport java.lang.invoke.VarHandle;\nimport java.net.URL;\n\n");
             writeImplementation(writer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void writePackage(Writer writer) throws IOException {
-        writer.write("package " + nativeLibrary.packageName() + ";\n\n");
-    }
-
-    private void writeImports(Writer writer) throws IOException {
-        writer.write("import java.lang.foreign.*;\nimport java.lang.invoke.MethodHandle;\nimport java.lang.invoke.VarHandle;\nimport java.net.URL;\n\n");
     }
 
     private void writeImplementation(Writer writer) throws IOException {
