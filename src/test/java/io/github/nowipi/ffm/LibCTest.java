@@ -39,8 +39,8 @@ final class LibCTest {
         LibC libC = new LibCImpl();
         try(var arena = Arena.ofConfined()) {
             Pointer<Void> file = libC.fopen(
-                    new BytePointer(arena, "file-does-not-exist".getBytes(StandardCharsets.US_ASCII)),
-                    new BytePointer(arena, "r".getBytes(StandardCharsets.US_ASCII)));
+                    new BytePointer(arena, "file-does-not-exist\0".getBytes(StandardCharsets.US_ASCII)),
+                    new BytePointer(arena, "r\0".getBytes(StandardCharsets.US_ASCII)));
             if (file.getAddress() == 0) {
                 Pointer<Byte> message = libC.strerror(libC.errno());
                 int messageLength = libC.strlen(message);

@@ -1,6 +1,8 @@
 package io.github.nowipi.ffm.processor;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
@@ -62,9 +64,9 @@ public class StructWriter {
     }
 
     private void writeStaticOffsetDeclarations(Writer writer) throws IOException {
-        for (StructFileData.MemberData member : fileData.getMembers()) {
+        for (StructFileData.StructMember member : fileData.getMembers()) {
             writer.write("public static final long ");
-            writer.write(member.offsetName());
+            writer.write(member.getOffsetName());
             writer.write(";\n");
         }
     }
@@ -72,25 +74,32 @@ public class StructWriter {
     private void writeStaticInitialization(Writer writer) throws IOException {
         writer.write("static {\n");
         writer.write("LAYOUT = MemoryLayout.structLayout(\n");
-        List<StructFileData.MemberData> members = fileData.getMembers();
+        List<StructFileData.StructMember> members = fileData.getMembers();
+        StructFileData.StructMember lastMember = null;
         for (int i = 0; i < members.size(); i++) {
-            StructFileData.MemberData member = members.get(i);
-            writer.write(member.layout());
+            StructFileData.StructMember member = members.get(i);
+            /*if (lastMember != null && lastMember.getByteSize() > member.getByteSize()) {
+                //add padding
+            }*/
+            writer.write(member.getLayout());
             writer.write(".withName(\"");
-            writer.write(member.name());
+            writer.write(member.getName());
+            writer.write("\")");
 
-            if (i == members.size()-1) {
-                writer.write("\")\n");
-            } else {
-                writer.write("\"),\n");
+            if (i != members.size()-1) {
+                writer.write(",");
+
             }
+            writer.write("\n");
+
+            lastMember = member;
         }
         writer.write(");\n");
 
-        for (StructFileData.MemberData member : members) {
-            writer.write(member.offsetName());
+        for (StructFileData.StructMember member : members) {
+            writer.write(member.getOffsetName());
             writer.write(" = LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement(\"");
-            writer.write(member.name());
+            writer.write(member.getName());
             writer.write("\"));\n");
         }
 
@@ -115,37 +124,58 @@ public class StructWriter {
     }
 
     private void writeMemberGetters(Writer writer) throws IOException {
-        for (StructFileData.MemberData member : fileData.getMembers()) {
+        for (StructFileData.StructMember member : fileData.getMembers()) {
 
-            if (member.isStruct()) {
+            if (member instanceof StructFileData.StructValueMember valueMember) {
                 writer.write("public ");
-                writer.write(member.javaTypeName());
+                writer.write(valueMember.getTypeName());
                 writer.write(" get");
-                writer.write(capitalize(member.name()));
+                writer.write(capitalize(member.getName()));
                 writer.write("() {\nreturn ");
-                writer.write(member.javaTypeName());
+                writer.write(valueMember.getTypeName());
                 writer.write(".from(nativeSegment.asSlice(");
-                writer.write(member.offsetName());
+                writer.write(member.getOffsetName());
                 writer.write(", ");
-                writer.write(member.layout());
+                writer.write(member.getLayout());
                 writer.write("));\n}\n");
             } else {
                 writer.write("public ");
-                writer.write(member.javaTypeName());
+                writer.write(member.getTypeName());
                 writer.write(" get");
-                writer.write(capitalize(member.name()));
+                writer.write(capitalize(member.getName()));
                 writer.write("() {\nreturn ");
-                if (member.isPointer()) {
+                if (member instanceof StructFileData.PointerMember pointerMember) {
                     writer.write("new ");
-                    writer.write(fileData.getPointerClass(member.type()).toString());
+                    writer.write(pointerMember.getPointerClassImplementation());
+                    if (pointerMember.isPointsToStruct()) {
+                        writer.write("<>");
+                    }
                     writer.write("(");
+                    if (pointerMember.isPointsToStruct()) {
+                        writer.write(pointerMember.getPointsToTypeName());
+                        writer.write("::getNativeSegment, ");
+                        writer.write(pointerMember.getPointsToTypeName());
+                        writer.write("::from, ");
+                    }
+
                 }
                 writer.write("nativeSegment.get(");
-                writer.write(member.layout());
+                writer.write(member.getLayout());
+                if (member instanceof StructFileData.PointerMember pointerMember) {
+                    writer.write(".withTargetLayout(");
+                    writer.write(pointerMember.getPointsToLayout());
+                    writer.write(")");
+                }
                 writer.write(", ");
-                writer.write(member.offsetName());
+                writer.write(member.getOffsetName());
                 writer.write(")");
-                if (member.isPointer()) {
+
+                if (member instanceof StructFileData.PointerMember pointerMember && pointerMember.getPointsToLayout().contains(".LAYOUT")) {
+                    writer.write(", ");
+                    writer.write(pointerMember.getPointsToLayout());
+                }
+
+                if (member instanceof StructFileData.PointerMember) {
                     writer.write(")");
                 }
                 writer.write(";\n}\n");
@@ -154,35 +184,35 @@ public class StructWriter {
     }
 
     private void writeMemberSetters(Writer writer) throws IOException {
-        for (StructFileData.MemberData member : fileData.getMembers()) {
-            if (member.isStruct()) {
+        for (StructFileData.StructMember member : fileData.getMembers()) {
+            if (member instanceof StructFileData.StructValueMember) {
                 writer.write("public void set");
-                writer.write(capitalize(member.name()));
+                writer.write(capitalize(member.getName()));
                 writer.write("(");
-                writer.write(member.javaTypeName());
+                writer.write(member.getTypeName());
                 writer.write(" ");
-                writer.write(member.name());
+                writer.write(member.getName());
                 writer.write(") {\nnativeSegment.asSlice(");
-                writer.write(member.offsetName());
+                writer.write(member.getOffsetName());
                 writer.write(", ");
-                writer.write(member.layout());
+                writer.write(member.getLayout());
                 writer.write(").copyFrom(");
-                writer.write(member.name());
+                writer.write(member.getName());
                 writer.write(".getNativeSegment());\n}\n");
             } else {
                 writer.write("public void set");
-                writer.write(capitalize(member.name()));
+                writer.write(capitalize(member.getName()));
                 writer.write("(");
-                writer.write(member.javaTypeName());
+                writer.write(member.getTypeName());
                 writer.write(" ");
-                writer.write(member.name());
+                writer.write(member.getName());
                 writer.write(") {\nnativeSegment.set(");
-                writer.write(member.layout());
+                writer.write(member.getLayout());
                 writer.write(", ");
-                writer.write(member.offsetName());
+                writer.write(member.getOffsetName());
                 writer.write(", ");
-                writer.write(member.name());
-                if (member.isPointer()) {
+                writer.write(member.getName());
+                if (member instanceof StructFileData.PointerMember) {
                     writer.write(".getNativeSegment()");
                 }
                 writer.write(");\n}\n");

@@ -17,21 +17,163 @@ import java.util.List;
 
 public class StructFileData {
 
-    public record MemberData(String offsetName, String name, String layout, String javaTypeName, TypeMirror type) {
-        public boolean isStruct() {
-            return layout.contains(".LAYOUT");
+    public abstract sealed static class StructMember {
+
+        private final String name;
+        private final String offsetName;
+        private final String typeName;
+
+
+        public StructMember(ExecutableElement functionElement) {
+            name = functionElement.getSimpleName().toString();
+            offsetName = name + "Offset";
+            typeName = functionElement.getReturnType().toString();
         }
-        public boolean isPointer() {
-            return layout.contains(".ADDRESS");
+
+        public String getOffsetName() {
+            return offsetName;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public abstract String getLayout();
+
+        public String getTypeName() {
+            return typeName;
+        }
+
+        private static boolean isPointer(TypeMirror type, Types types, TypeMirror pointerClassType) {
+
+            if (type.getKind() != TypeKind.DECLARED) {
+                return false;
+            }
+            return types.isSubtype(types.erasure(type), types.erasure(pointerClassType));
+        }
+
+        public static StructMember from(ExecutableElement element, Types types, Elements elements, TypeMirror pointerClassType) {
+            TypeMirror returnType = element.getReturnType();
+            if (isPointer(returnType, types, pointerClassType)) {
+                return new PointerMember(element, types, elements);
+            }
+
+            if (returnType.getKind().isPrimitive()) {
+                return new PrimitiveValueMember(element);
+            }
+
+            return new StructValueMember(element);
         }
     }
 
-    private final List<MemberData> members;
+    public static final class PointerMember extends StructMember {
+
+        private final String pointsToLayout;
+        private final boolean pointsToStruct;
+        private final String pointerClassImplementation;
+        private final String pointsToTypeName;
+
+        public PointerMember(ExecutableElement functionElement, Types types, Elements elements) {
+            super(functionElement);
+            TypeMirror genericType = ((DeclaredType)functionElement.getReturnType()).getTypeArguments().get(0);
+
+            pointsToTypeName = ((DeclaredType)genericType).asElement().getSimpleName().toString();
+
+            boolean struct = false;
+            if (genericType.getKind() == TypeKind.ERROR) {
+                struct = true;
+                pointsToLayout = genericType + ".LAYOUT";
+            } else if (types.isSubtype(genericType, elements.getTypeElement("java.lang.Number").asType())) {
+                pointsToLayout = switch (pointsToTypeName) {
+                    case "Integer" -> "ValueLayout.JAVA_INT";
+                    case "Double" -> "ValueLayout.JAVA_DOUBLE";
+                    case "Float" -> "ValueLayout.JAVA_FLOAT";
+                    case "Short" -> "ValueLayout.JAVA_SHORT";
+                    case "Long" -> "ValueLayout.JAVA_LONG";
+                    case "Character" -> "ValueLayout.JAVA_CHAR";
+                    case "Byte" -> "ValueLayout.JAVA_BYTE";
+                    case "Boolean" -> "ValueLayout.JAVA_BOOLEAN";
+                    default -> throw new IllegalStateException("Unexpected value: " + genericType);
+                };
+            } else {
+                throw new IllegalStateException();
+            }
+
+            if (struct) {
+                pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer.StructPointer";
+            } else if (types.isSameType(genericType, elements.getTypeElement("java.lang.Void").asType())) {
+                pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer.VoidPointer";
+            } else if (types.isSubtype(genericType, elements.getTypeElement("java.lang.Number").asType())) {
+                pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer." + ((DeclaredType)genericType).asElement().getSimpleName() + "Pointer";
+            } else {
+                throw new IllegalArgumentException("Not a valid member " + functionElement);
+            }
+
+            pointsToStruct = struct;
+
+        }
+
+        @Override
+        public String getLayout() {
+            return "ValueLayout.ADDRESS";
+        }
+
+        public boolean isPointsToStruct() {
+            return pointsToStruct;
+        }
+
+        public String getPointsToLayout() {
+            return pointsToLayout;
+        }
+
+        public String getPointerClassImplementation() {
+            return pointerClassImplementation;
+        }
+
+        public String getPointsToTypeName() {
+            return pointsToTypeName;
+        }
+    }
+
+    public abstract sealed static class ValueMember extends StructMember {
+
+        public ValueMember(ExecutableElement functionElement) {
+            super(functionElement);
+        }
+    }
+
+    public static final class PrimitiveValueMember extends ValueMember {
+
+        private final String layout;
+
+        public PrimitiveValueMember(ExecutableElement functionElement) {
+            super(functionElement);
+            layout = "ValueLayout.JAVA_" + (functionElement.getReturnType().getKind().name());
+        }
+
+        @Override
+        public String getLayout() {
+            return layout;
+        }
+    }
+
+    public static final class StructValueMember extends ValueMember {
+        private final String layout;
+
+        public StructValueMember(ExecutableElement functionElement) {
+            super(functionElement);
+            layout = functionElement.getReturnType() + ".LAYOUT";
+        }
+
+        @Override
+        public String getLayout() {
+            return layout;
+        }
+    }
+
+    private final List<StructMember> members;
     private final String className;
     private final String packageName;
-    private final Types types;
-    private final Elements elements;
-    private final TypeMirror pointerType;
 
     public StructFileData(TypeElement annotatedElement, Struct annotation, ProcessingEnvironment env) {
 
@@ -39,9 +181,9 @@ public class StructFileData {
             throw new IllegalArgumentException("Types annotated with Struct need to be of the kind: INTERFACE");
         }
 
-        elements = env.getElementUtils();
-        pointerType = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.Pointer").asType();
-        types = env.getTypeUtils();
+        Elements elements = env.getElementUtils();
+        TypeMirror pointerType = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.Pointer").asType();
+        Types types = env.getTypeUtils();
         packageName = elements.getPackageOf(annotatedElement).getQualifiedName().toString();
         className = annotation.value();
 
@@ -56,64 +198,11 @@ public class StructFileData {
                 throw new IllegalArgumentException("Function cannot have parameters " + functionElement.getEnclosingElement() + "#" + functionElement);
             }
 
-            String name = functionElement.getSimpleName().toString();
-
-            String layout;
-
-            if (isPointer(functionElement.getReturnType())) {
-                layout = "ValueLayout.ADDRESS";
-            } else {
-                layout = typeToValueLayout(functionElement.getReturnType());
-            }
-
-
-            members.add(new MemberData(name+ "Offset", name, layout, functionElement.getReturnType().toString(), functionElement.getReturnType()));
+            members.add(StructMember.from(functionElement, types, elements, pointerType));
         }
     }
 
-    //TODO factor out to share same logic with NativeFunction
-    private boolean isPointer(TypeMirror type) {
-        if (type.getKind() != TypeKind.DECLARED) {
-            return false;
-        }
-        return types.isSubtype(types.erasure(type), types.erasure(pointerType));
-    }
-
-    private boolean isStruct(TypeMirror type) {
-        return type.getKind() == TypeKind.ERROR;
-    }
-
-    public DeclaredType getPointerClass(TypeMirror pointerInterfaceType) {
-        if (pointerInterfaceType.getKind() != TypeKind.DECLARED)
-            return null;
-
-        TypeMirror genericType = ((DeclaredType)pointerInterfaceType).getTypeArguments().get(0);
-        if (genericType.getKind() == TypeKind.VOID || types.isSameType(genericType, elements.getTypeElement("java.lang.Void").asType())) {
-            return (DeclaredType) elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.VoidPointer").asType();
-        }
-        if (types.isSubtype(genericType, elements.getTypeElement("java.lang.Number").asType())) {
-            return (DeclaredType) elements.getTypeElement("io.github.nowipi.ffm.processor.pointer." + ((DeclaredType)genericType).asElement().getSimpleName() + "Pointer").asType();
-        }
-        if (isStruct(genericType)) {
-            return (DeclaredType) elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.StructPointer").asType();
-        }
-
-        IO.println(genericType);
-        return null;
-    }
-
-    private static String typeToValueLayout(TypeMirror type) {
-        if (type.getKind().isPrimitive()) {
-            return "ValueLayout.JAVA_" + (type.getKind().name());
-        } else if (type.getKind() == TypeKind.DECLARED) {
-            DeclaredType declaredType = (DeclaredType) type;
-            return declaredType.asElement().getSimpleName() + ".LAYOUT";
-        } else {
-            return type + ".LAYOUT";
-        }
-    }
-
-    public List<MemberData> getMembers() {
+    public List<StructMember> getMembers() {
         return members;
     }
 

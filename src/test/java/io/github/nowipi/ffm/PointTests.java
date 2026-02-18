@@ -1,5 +1,6 @@
 package io.github.nowipi.ffm;
 
+import io.github.nowipi.ffm.processor.pointer.Pointer;
 import io.github.nowipi.ffm.processor.pointer.StructPointer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.foreign.Arena;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PointTests {
 
@@ -32,13 +34,9 @@ public class PointTests {
     void setUp() {
         arena = Arena.ofConfined();
 
-        a = new Point(arena);
-        a.setX(10);
-        a.setY(5);
+        a = pointLib.pointNew(10, 5).get(0);
 
-        b = new Point(arena);
-        b.setX(1);
-        b.setY(2);
+        b = pointLib.pointNew(1, 2).get(0);
     }
 
     @Test
@@ -53,5 +51,20 @@ public class PointTests {
         pointLib.pointAddMut(StructPointer.from(Point::getNativeSegment, Point::from, a, Point.LAYOUT), b);
         assertEquals(11, a.getX());
         assertEquals(7, a.getY());
+    }
+
+    @Test
+    void addPointArrayTest() {
+        PointArray array = pointLib.pointArrayNew(10).get(0);
+        long count = array.getCount();
+        Pointer<Point> data = array.getData(); //encouraged to eliminate creating the pointer over and over again
+        for (int i = 0; i < count; i++) {
+            Point p = data.getAtIndex(i);
+            float x = p.getX();
+            float y = p.getY();
+            assertEquals(x, i);
+            assertEquals(y, i);
+        }
+        assertTrue(true);
     }
 }
