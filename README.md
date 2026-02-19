@@ -7,7 +7,7 @@ Write an interface:
 public interface LibC {
 
     @Function("strlen")
-    int strlen(MemorySegment s);
+    int strlen(Pointer<Byte> s);
     
 }
 ```
@@ -25,8 +25,8 @@ public class LibCImpl implements LibC {
         strlenHandle = linker.downcallHandle(lookup.find("strlen").orElseThrow(), strlenDescriptor);
     }
     @Override
-    public int strlen(java.lang.foreign.MemorySegment s) {
-        try { return (int) strlenHandle.invokeExact(s);} catch (Throwable e) { throw new RuntimeException(e); }
+    public int strlen(io.github.nowipi.ffm.processor.pointer.Pointer<java.lang.Byte> str) {
+        try { return (int) strlenHandle.invoke(str.getNativeSegment());} catch (Throwable e) { throw new RuntimeException(e); }
     }
 }
 ```
@@ -35,8 +35,7 @@ And simply use it:
 LibC libC = new LibCImpl();
 try(Arena arena = Arena.ofConfined()) {
     String str = "Hello World!";
-    MemorySegment nativeString = arena.allocateFrom(str, StandardCharsets.US_ASCII);
-    int l = libC.strlen(nativeString);
+    int l = libC.strlen(new BytePointer(arena.allocateFrom(str)));
     Assertions.assertEquals(str.length(), l);
 }
 ```
@@ -44,6 +43,7 @@ try(Arena arena = Arena.ofConfined()) {
 - Functions
 - Capturing
 - Structs
+- Pointers
 
 ### Functions
 You can map functions of a native library using the `@Function` annotation.
@@ -54,4 +54,6 @@ You can map a native struct to a Java class by annotating an interface with the 
 Every method inside the interface is interpreted as a member of the struct you are trying to map.
 With the name of the method as the name of the member and the return type as the member's type, parameters are not allowed.
 When doing this a class will be generated with your given name and with getters and setters for every member of the struct.
-Plus some additional helper methods.
+### Pointers
+The base `Pointer<T>` class can be uses if a function or struct member is a native pointer to a type T.
+This class will not allocate extra memory but it is possible to expand the 'view' using the `Pointer#get` and `Pointer#getAtIndex` methods. If the offset or index is out of the native segments bounds it will throw an exception.

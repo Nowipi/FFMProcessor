@@ -19,7 +19,7 @@ final class LibCTest {
         LibC libC = new LibCImpl();
         try(Arena arena = Arena.ofConfined()) {
             String str = "Hello World!";
-            int l = libC.strlen(new BytePointer(arena, str.getBytes(StandardCharsets.US_ASCII)));
+            int l = libC.strlen(new BytePointer(arena.allocateFrom(str)));
             Assertions.assertEquals(str.length(), l);
         }
     }
