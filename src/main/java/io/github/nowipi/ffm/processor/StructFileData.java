@@ -174,6 +174,7 @@ public class StructFileData {
     private final List<StructMember> members;
     private final String className;
     private final String packageName;
+    private final boolean padded;
 
     public StructFileData(TypeElement annotatedElement, Struct annotation, ProcessingEnvironment env) {
 
@@ -186,6 +187,7 @@ public class StructFileData {
         Types types = env.getTypeUtils();
         packageName = elements.getPackageOf(annotatedElement).getQualifiedName().toString();
         className = annotation.value();
+        padded = annotation.autoPadded();
 
 
         members = new ArrayList<>();
@@ -212,5 +214,9 @@ public class StructFileData {
 
     public String getClassName() {
         return className;
+    }
+
+    public boolean isPadded() {
+        return padded;
     }
 }

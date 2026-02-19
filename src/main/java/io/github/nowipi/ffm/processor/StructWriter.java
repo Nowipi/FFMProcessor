@@ -73,14 +73,16 @@ public class StructWriter {
 
     private void writeStaticInitialization(Writer writer) throws IOException {
         writer.write("static {\n");
-        writer.write("LAYOUT = MemoryLayout.structLayout(\n");
+        writer.write("LAYOUT = ");
+        if (fileData.isPadded()) {
+            writer.write("io.github.nowipi.ffm.processor.Padding.createPaddedLayout(\n");
+        } else {
+            writer.write("MemoryLayout.structLayout(\n");
+        }
         List<StructFileData.StructMember> members = fileData.getMembers();
-        StructFileData.StructMember lastMember = null;
+
         for (int i = 0; i < members.size(); i++) {
             StructFileData.StructMember member = members.get(i);
-            /*if (lastMember != null && lastMember.getByteSize() > member.getByteSize()) {
-                //add padding
-            }*/
             writer.write(member.getLayout());
             writer.write(".withName(\"");
             writer.write(member.getName());
@@ -92,7 +94,6 @@ public class StructWriter {
             }
             writer.write("\n");
 
-            lastMember = member;
         }
         writer.write(");\n");
 

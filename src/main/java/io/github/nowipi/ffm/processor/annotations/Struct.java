@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 public @interface Struct {
     String value();
+    boolean autoPadded() default true;
 }
