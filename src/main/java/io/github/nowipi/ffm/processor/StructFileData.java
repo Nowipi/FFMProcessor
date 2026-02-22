@@ -83,6 +83,7 @@ public class StructFileData {
             if (genericType.getKind() == TypeKind.ERROR) {
                 struct = true;
                 pointsToLayout = genericType + ".LAYOUT";
+                pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer.StructPointer";
             } else if (types.isSubtype(genericType, elements.getTypeElement("java.lang.Number").asType())) {
                 pointsToLayout = switch (pointsToTypeName) {
                     case "Integer" -> "ValueLayout.JAVA_INT";
@@ -95,16 +96,10 @@ public class StructFileData {
                     case "Boolean" -> "ValueLayout.JAVA_BOOLEAN";
                     default -> throw new IllegalStateException("Unexpected value: " + genericType);
                 };
-            } else {
-                throw new IllegalStateException();
-            }
-
-            if (struct) {
-                pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer.StructPointer";
+                pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer." + ((DeclaredType)genericType).asElement().getSimpleName() + "Pointer";
             } else if (types.isSameType(genericType, elements.getTypeElement("java.lang.Void").asType())) {
                 pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer.VoidPointer";
-            } else if (types.isSubtype(genericType, elements.getTypeElement("java.lang.Number").asType())) {
-                pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer." + ((DeclaredType)genericType).asElement().getSimpleName() + "Pointer";
+                pointsToLayout = "ValueLayout.JAVA_BYTE";
             } else {
                 throw new IllegalArgumentException("Not a valid member " + functionElement);
             }
