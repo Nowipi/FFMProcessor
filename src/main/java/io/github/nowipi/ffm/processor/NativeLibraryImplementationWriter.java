@@ -3,15 +3,10 @@ package io.github.nowipi.ffm.processor;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
-import java.net.URL;
-import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -251,11 +246,11 @@ final class NativeLibraryImplementationWriter {
                 } else if (nativeFunction.hasPointerReturn()) {
 
                     writer.write("new ");
-                    String str = nativeFunction.getPointerClass((DeclaredType) nativeFunction.javaReturnType());
-                    if (str.contains("StructPointer")) {
+                    String pointerTypeName = nativeFunction.getPointerClass((DeclaredType) nativeFunction.javaReturnType());
+                    if (pointerTypeName.contains("StructPointer")) {
                         structPointer = true;
                     }
-                    writer.write(str);
+                    writer.write(pointerTypeName);
                     writer.write("((MemorySegment) ");
                 } else {
                     writer.write("(");
@@ -271,7 +266,10 @@ final class NativeLibraryImplementationWriter {
                 writer.write("capturedState,");
             }
             if (nativeFunction.hasStructReturn()) {
-                writer.write("arena,");
+                writer.write("arena");
+                if (!nativeFunction.javaParameterNames().isEmpty()) {
+                    writer.write(",");
+                }
             }
             writer.write(nativeFunction.javaParameterNames());
 

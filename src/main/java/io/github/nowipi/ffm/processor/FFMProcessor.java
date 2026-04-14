@@ -9,6 +9,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @SupportedAnnotationTypes({
@@ -33,26 +35,35 @@ public final class FFMProcessor extends AbstractProcessor {
         this.messager = env.getMessager();
     }
 
-    private boolean processed;
+    private final Set<TypeElement> libraryElements = new HashSet<>();
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        if (processed || roundEnv.processingOver()) {
-            return false;
-        }
 
+        messager.printNote("Start processing round");
+
+        // 1. Always process structs
         for (Element element : roundEnv.getElementsAnnotatedWith(Struct.class)) {
             if (element instanceof TypeElement typed) {
                 processStruct(typed, element.getAnnotation(Struct.class));
             }
         }
 
+        // 2. Collect libraries (across ALL rounds)
         for (Element element : roundEnv.getElementsAnnotatedWith(Library.class)) {
             if (element instanceof TypeElement typed) {
-                processLibrary(typed, element.getAnnotation(Library.class));
-
+                libraryElements.add(typed);
             }
         }
-        processed = true;
+
+        // 3. Only process libraries at the very end
+        if (roundEnv.processingOver()) {
+            messager.printNote("Processing libraries (final round)");
+            for (TypeElement element : libraryElements) {
+                processLibrary(element, element.getAnnotation(Library.class));
+            }
+        }
+
         return true;
     }
 

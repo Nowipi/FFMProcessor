@@ -1,6 +1,7 @@
 package io.github.nowipi.ffm.processor;
 
 import io.github.nowipi.ffm.processor.annotations.Function;
+import io.github.nowipi.ffm.processor.annotations.Struct;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
@@ -65,7 +66,7 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
         return javaDeclaration.getParameters().stream()
                 .map(v -> {
                     if (isStruct(v.asType()) || !isValue(v.asType())) {
-                        return v.getSimpleName().toString() + ".getNativeSegment()";
+                        return v.getSimpleName() + ".getNativeSegment()";
                     }
                     return v.getSimpleName().toString();
                 })
@@ -104,28 +105,39 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
         if (type.getKind() != TypeKind.DECLARED) {
             return true;
         }
-        return !types.isSubtype(types.erasure(type), types.erasure(pointerType));
+        return !isPointer(type);
     }
 
     public String getPointerClass(DeclaredType pointerInterfaceType) {
         TypeMirror genericType = pointerInterfaceType.getTypeArguments().get(0);
         if (isStruct(genericType)) {
             TypeElement found = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.StructPointer");
-            return found.getQualifiedName().toString() + "<>(" + genericType + "::getNativeSegment, " + genericType + "::from, ";
+            return found.getQualifiedName() + "<>(" + genericType + "::getNativeSegment, " + genericType + "::from, ";
         }
-        if (genericType.getKind() == TypeKind.VOID || types.isSameType(genericType, elements.getTypeElement("java.lang.Void").asType())) {
+        if (isVoid(genericType)) {
             return elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.VoidPointer").asType().toString() + "(";
         }
-        if (types.isSubtype(genericType, elements.getTypeElement("java.lang.Number").asType())) {
+        if (isPrimitiveWrapper(genericType)) {
             return elements.getTypeElement("io.github.nowipi.ffm.processor.pointer." + ((DeclaredType)genericType).asElement().getSimpleName() + "Pointer").asType().toString() + "(";
         }
 
-        IO.println(genericType);
-        return null;
+        throw new RuntimeException("Failed to get pointer's implementation for: " + genericType);
+    }
+
+    private boolean isPointer(TypeMirror type) {
+        return types.isSubtype(types.erasure(type), types.erasure(pointerType));
+    }
+
+    private boolean isVoid(TypeMirror type) {
+        return type.getKind() == TypeKind.VOID || types.isSameType(type, elements.getTypeElement("java.lang.Void").asType());
+    }
+
+    private boolean isPrimitiveWrapper(TypeMirror type) {
+        return types.isSubtype(type, elements.getTypeElement("java.lang.Number").asType());
     }
 
     private boolean isStruct(TypeMirror type) {
-        return type.getKind() == TypeKind.ERROR;
+        return type.getKind() == TypeKind.DECLARED && !isVoid(type) && !isPrimitiveWrapper(type) && !isPointer(type);
     }
 
     public boolean hasStructReturn() {

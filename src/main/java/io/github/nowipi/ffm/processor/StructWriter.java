@@ -221,7 +221,7 @@ public class StructWriter {
         }
     }
 
-    private static String capitalize(String str) {
-        return Character.toUpperCase(str.charAt(0)) + str.substring(1);
+    private static String capitalize(String name) {
+        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
     }
 }
