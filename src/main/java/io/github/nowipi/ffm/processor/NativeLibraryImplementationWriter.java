@@ -163,13 +163,9 @@ final class NativeLibraryImplementationWriter {
         if (nativeLibraryOpt.isPresent()) {
             String nativeLibraryName = nativeLibraryOpt.get();
 
-            writer.write("\tURL resource = ");
-            writer.write(nativeLibrary.className());
-            writer.write(".class.getResource(\"");
+            writer.write("\tlookup = SymbolLookup.libraryLookup(\"");
             writer.write(nativeLibraryName);
-            writer.write("\");\n\tString path = \"");
-            writer.write(nativeLibraryName);
-            writer.write("\";\n\tif (resource != null) {\n\t\tpath = resource.getPath().substring(1);\n\t}\n\tlookup = SymbolLookup.libraryLookup(path, arena);\n");
+            writer.write("\", arena);\n");
         }
 
         writeHandleInitializers(writer);
