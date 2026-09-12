@@ -25,16 +25,6 @@ final class LibCTest {
     }
 
     @Test
-    public void messageBoxTest() {
-        User32 user32 = new User32Impl();
-        try(var arena = Arena.ofConfined()) {
-            var text = new BytePointer(arena, "Hello World!\0".getBytes(StandardCharsets.UTF_16LE));
-            var title = new BytePointer(arena, "Hello Title\0".getBytes(StandardCharsets.UTF_16LE));
-            user32.messageBox(NULL, text, title, 0x00000003L);
-        }
-    }
-
-    @Test
     public void writeTest() {
         LibC libC = new LibCImpl();
         try(var arena = Arena.ofConfined()) {

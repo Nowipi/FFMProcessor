@@ -22,15 +22,19 @@ final class NativeLibraryImplementationWriter {
     }
 
     public void createImplementationClass(Filer filer, Element creator) throws IOException {
-        JavaFileObject file = filer.createSourceFile(nativeLibrary.packageName() + "." + implementationClassName, creator);
+        String sourceFileFullName = nativeLibrary.packageName().isEmpty() ? implementationClassName : nativeLibrary.packageName().get() + "." + implementationClassName;
+        JavaFileObject file = filer.createSourceFile( sourceFileFullName, creator);
         writeImplementationClass(file);
     }
 
     private void writeImplementationClass(JavaFileObject file) {
         try (Writer writer = file.openWriter()) {
-            writer.write("package ");
-            writer.write(nativeLibrary.packageName());
-            writer.write(";\n\n");
+            var packageName = nativeLibrary.packageName();
+            if (packageName.isPresent()) {
+                writer.write("package ");
+                writer.write(packageName.get());
+                writer.write(";\n\n");
+            }
             writer.write("import java.lang.foreign.*;\nimport java.lang.invoke.MethodHandle;\nimport java.lang.invoke.VarHandle;\nimport java.net.URL;\n\n");
             writeImplementation(writer);
         } catch (IOException e) {

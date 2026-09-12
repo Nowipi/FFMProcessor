@@ -116,8 +116,9 @@ public sealed class NativeLibrary permits NativeLibraryInterface, NativeLibraryC
         }
     }
 
-    public String packageName() {
-        return elements.getPackageOf(typeElement).getQualifiedName().toString();
+    public Optional<String> packageName() {
+        String packageName = elements.getPackageOf(typeElement).getQualifiedName().toString();
+        return packageName.isEmpty() ? Optional.empty() : Optional.of(packageName);
     }
 
     public String className() {
