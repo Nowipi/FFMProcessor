@@ -1,10 +1,10 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.library.function;
 
 import io.github.nowipi.ffm.processor.annotations.CaptureState;
 
 import javax.lang.model.element.ExecutableElement;
 
-record VariableCapture(CaptureState annotation, ExecutableElement javaDeclaration) {
+public record VariableCapture(CaptureState annotation, ExecutableElement javaDeclaration) {
 
     public String handleName() {
         return annotation.value() + "Handle";

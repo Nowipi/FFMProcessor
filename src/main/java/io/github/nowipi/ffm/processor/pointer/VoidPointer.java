@@ -1,47 +1,55 @@
 package io.github.nowipi.ffm.processor.pointer;
 
+import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
+import java.util.function.Function;
 
-public class VoidPointer implements Pointer<Void> {
+public class VoidPointer {
 
-    private final MemorySegment pointerSegment;
+    private static final VoidPointer NULL = new VoidPointer(MemorySegment.NULL);
+
+    MemorySegment pointerSegment;
 
     public VoidPointer(MemorySegment pointerSegment) {
         this.pointerSegment = pointerSegment;
     }
 
-    @Override
-    public Void get(long offset) {
-        return null;
+
+    public Pointer<Integer> toIntegerPointer() {
+        return new IntegerPointer(pointerSegment);
     }
 
-    @Override
-    public Void getAtIndex(long index) {
-        return null;
+    public Pointer<Byte> toBytePointer() {
+        return new BytePointer(pointerSegment);
     }
 
-    @Override
-    public void set(long offset, Void value) {
-
+    public Pointer<Float> toFloatPointer() {
+        return new FloatPointer(pointerSegment);
     }
 
-    @Override
-    public void setAtIndex(long index, Void value) {
-
+    public Pointer<Double> toDoublePointer() {
+        return new DoublePointer(pointerSegment);
     }
 
-    @Override
-    public long getByteSize() {
-        return 0;
+    public Pointer<Short> toShortPointer() {
+        return new ShortPointer(pointerSegment);
     }
 
-    @Override
+    public Pointer<Long> toLongPointer() {
+        return new LongPointer(pointerSegment);
+    }
+
+    public <S> StructPointer<S> toStructPointer(Function<S, MemorySegment> serializer,
+                                                Function<MemorySegment, S> deserializer,
+                                                MemoryLayout layout) {
+        return new StructPointer<>(serializer, deserializer, pointerSegment, layout);
+    }
+
     public long getAddress() {
         return pointerSegment.address();
     }
 
-    @Override
-    public MemorySegment getNativeSegment() {
+    public MemorySegment getMemorySegment() {
         return pointerSegment;
     }
 }

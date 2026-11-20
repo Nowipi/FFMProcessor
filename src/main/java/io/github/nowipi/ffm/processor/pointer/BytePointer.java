@@ -5,11 +5,10 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.nio.charset.StandardCharsets;
 
-public class BytePointer implements Pointer<Byte> {
-    private MemorySegment pointerSegment;
+public class BytePointer extends VoidPointer implements Pointer<Byte> {
 
     public BytePointer(MemorySegment pointerSegment) {
-        this.pointerSegment = pointerSegment;
+        super(pointerSegment);
     }
 
     public BytePointer(Arena arena, byte... values) {
@@ -36,10 +35,6 @@ public class BytePointer implements Pointer<Byte> {
         return pointerSegment.get(ValueLayout.JAVA_BYTE, offset);
     }
 
-    @Override
-    public Byte getAtIndex(long index) {
-        return get(index);
-    }
 
     @Override
     public void set(long offset, Byte value) {
@@ -50,22 +45,8 @@ public class BytePointer implements Pointer<Byte> {
     }
 
     @Override
-    public void setAtIndex(long index, Byte value) {
-        set(index, value);
-    }
-
-    @Override
     public long getByteSize() {
         return ValueLayout.JAVA_BYTE.byteSize();
     }
 
-    @Override
-    public long getAddress() {
-        return pointerSegment.address();
-    }
-
-    @Override
-    public MemorySegment getNativeSegment() {
-        return pointerSegment;
-    }
 }

@@ -1,20 +1,19 @@
 package io.github.nowipi.ffm.processor.pointer;
 
-import java.lang.foreign.MemorySegment;
-
 public interface Pointer<T> {
 
-    Pointer<Void> NULL = new VoidPointer(MemorySegment.NULL);
-
     T get(long offset);
-    T getAtIndex(long index);
+    default T getAtIndex(long index) {
+        return get(getByteSize() *  index);
+    }
 
     void set(long offset, T value);
-    void setAtIndex(long index, T value);
+    default void setAtIndex(long index, T value) {
+        set(getByteSize() * index, value);
+    }
 
 
     long getByteSize();
     long getAddress();
 
-    MemorySegment getNativeSegment();
 }

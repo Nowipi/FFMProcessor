@@ -1,4 +1,9 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.library;
+
+import io.github.nowipi.ffm.processor.library.function.Capturing;
+import io.github.nowipi.ffm.processor.library.function.NativeFunction;
+import io.github.nowipi.ffm.processor.library.function.NativeMethod;
+import io.github.nowipi.ffm.processor.library.function.VariableCapture;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
@@ -11,7 +16,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-final class NativeLibraryImplementationWriter {
+public final class NativeLibraryImplementationWriter {
+
+    private static final String IMPORTS = """
+            import java.lang.foreign.*;
+            import java.lang.invoke.MethodHandle;
+            import java.lang.invoke.VarHandle;
+            import java.net.URL;
+            import io.github.nowipi.ffm.processor.pointer.VoidPointer;
+            
+            
+            """;
 
     private final String implementationClassName;
     private final NativeLibrary nativeLibrary;
@@ -35,7 +50,7 @@ final class NativeLibraryImplementationWriter {
                 writer.write(packageName.get());
                 writer.write(";\n\n");
             }
-            writer.write("import java.lang.foreign.*;\nimport java.lang.invoke.MethodHandle;\nimport java.lang.invoke.VarHandle;\nimport java.net.URL;\n\n");
+            writer.write(IMPORTS);
             writeImplementation(writer);
         } catch (IOException e) {
             throw new RuntimeException(e);

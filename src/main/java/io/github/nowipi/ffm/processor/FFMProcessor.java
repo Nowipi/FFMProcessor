@@ -2,6 +2,12 @@ package io.github.nowipi.ffm.processor;
 
 import io.github.nowipi.ffm.processor.annotations.Library;
 import io.github.nowipi.ffm.processor.annotations.Struct;
+import io.github.nowipi.ffm.processor.library.NativeLibrary;
+import io.github.nowipi.ffm.processor.library.NativeLibraryClass;
+import io.github.nowipi.ffm.processor.library.NativeLibraryImplementationWriter;
+import io.github.nowipi.ffm.processor.library.NativeLibraryInterface;
+import io.github.nowipi.ffm.processor.struct.StructFileData;
+import io.github.nowipi.ffm.processor.struct.StructWriter;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -10,7 +16,6 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @SupportedAnnotationTypes({

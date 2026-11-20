@@ -1,6 +1,8 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.library;
 
+import io.github.nowipi.ffm.processor.*;
 import io.github.nowipi.ffm.processor.annotations.*;
+import io.github.nowipi.ffm.processor.library.function.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;

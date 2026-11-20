@@ -4,11 +4,10 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
-public class DoublePointer implements Pointer<Double> {
-    private MemorySegment pointerSegment;
+public class DoublePointer extends VoidPointer implements Pointer<Double> {
 
     public DoublePointer(MemorySegment pointerSegment) {
-        this.pointerSegment = pointerSegment;
+        super(pointerSegment);
     }
 
     public DoublePointer(Arena arena, double... values) {
@@ -28,11 +27,6 @@ public class DoublePointer implements Pointer<Double> {
     }
 
     @Override
-    public Double getAtIndex(long index) {
-        return get(ValueLayout.JAVA_DOUBLE.byteSize() * index);
-    }
-
-    @Override
     public void set(long offset, Double value) {
         if (offset >= pointerSegment.byteSize()) {
             growViewSize();
@@ -41,22 +35,8 @@ public class DoublePointer implements Pointer<Double> {
     }
 
     @Override
-    public void setAtIndex(long index, Double value) {
-        set(ValueLayout.JAVA_DOUBLE.byteSize() * index, value);
-    }
-
-    @Override
     public long getByteSize() {
         return ValueLayout.JAVA_DOUBLE.byteSize();
     }
 
-    @Override
-    public long getAddress() {
-        return pointerSegment.address();
-    }
-
-    @Override
-    public MemorySegment getNativeSegment() {
-        return pointerSegment;
-    }
 }

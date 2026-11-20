@@ -1,7 +1,7 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.library.function;
 
 import io.github.nowipi.ffm.processor.annotations.Function;
-import io.github.nowipi.ffm.processor.annotations.Struct;
+import io.github.nowipi.ffm.processor.library.NativeLibrary;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
@@ -13,7 +13,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.stream.Collectors;
 
-sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
+public sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
 
     protected final NativeLibrary library;
     private final Function annotation;
@@ -21,11 +21,13 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
     protected final Types types;
     protected final Elements elements;
     protected final TypeMirror pointerType;
+    protected final TypeMirror voidPointerType;
 
     public NativeFunction(NativeLibrary library, Function annotation, ExecutableElement javaDeclaration, ProcessingEnvironment env) {
         elements = env.getElementUtils();
         types = env.getTypeUtils();
         pointerType = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.Pointer").asType();
+        voidPointerType = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.VoidPointer").asType();
         this.library = library;
         this.annotation = annotation;
         this.javaDeclaration = javaDeclaration;
@@ -66,6 +68,11 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
         return javaDeclaration.getParameters().stream()
                 .map(v -> {
                     if (isStruct(v.asType()) || !isValue(v.asType())) {
+                        if (isPointer(v.asType())) {
+                            return "((VoidPointer)" + v.getSimpleName() + ").getMemorySegment()";
+                        } else if (isVoid(v.asType())) {
+                            return v.getSimpleName() + ".getMemorySegment()";
+                        }
                         return v.getSimpleName() + ".getNativeSegment()";
                     }
                     return v.getSimpleName().toString();
@@ -105,17 +112,17 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
         if (type.getKind() != TypeKind.DECLARED) {
             return true;
         }
-        return !isPointer(type);
+        return !isPointer(type) && !isVoid(type);
     }
 
     public String getPointerClass(DeclaredType pointerInterfaceType) {
+        if (isVoid(pointerInterfaceType)) {
+            return elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.VoidPointer").asType().toString() + "(";
+        }
         TypeMirror genericType = pointerInterfaceType.getTypeArguments().get(0);
         if (isStruct(genericType)) {
             TypeElement found = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.StructPointer");
             return found.getQualifiedName() + "<>(" + genericType + "::getNativeSegment, " + genericType + "::from, ";
-        }
-        if (isVoid(genericType)) {
-            return elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.VoidPointer").asType().toString() + "(";
         }
         if (isPrimitiveWrapper(genericType)) {
             return elements.getTypeElement("io.github.nowipi.ffm.processor.pointer." + ((DeclaredType)genericType).asElement().getSimpleName() + "Pointer").asType().toString() + "(";
@@ -129,7 +136,7 @@ sealed class NativeFunction permits CapturingNativeFunction, NativeMethod {
     }
 
     private boolean isVoid(TypeMirror type) {
-        return type.getKind() == TypeKind.VOID || types.isSameType(type, elements.getTypeElement("java.lang.Void").asType());
+        return types.isSubtype(types.erasure(type), types.erasure(voidPointerType));
     }
 
     private boolean isPrimitiveWrapper(TypeMirror type) {

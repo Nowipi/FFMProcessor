@@ -4,11 +4,10 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
-public class ShortPointer implements Pointer<Short> {
-    private MemorySegment pointerSegment;
+public class ShortPointer extends VoidPointer implements Pointer<Short> {
 
     public ShortPointer(MemorySegment pointerSegment) {
-        this.pointerSegment = pointerSegment;
+        super(pointerSegment);
     }
 
     public ShortPointer(Arena arena, short... values) {
@@ -27,10 +26,6 @@ public class ShortPointer implements Pointer<Short> {
         return pointerSegment.get(ValueLayout.JAVA_SHORT, offset);
     }
 
-    @Override
-    public Short getAtIndex(long index) {
-        return get(ValueLayout.JAVA_SHORT.byteSize() * index);
-    }
 
     @Override
     public void set(long offset, Short value) {
@@ -40,23 +35,10 @@ public class ShortPointer implements Pointer<Short> {
         pointerSegment.set(ValueLayout.JAVA_SHORT, offset, value);
     }
 
-    @Override
-    public void setAtIndex(long index, Short value) {
-        set(ValueLayout.JAVA_SHORT.byteSize() * index, value);
-    }
 
     @Override
     public long getByteSize() {
         return ValueLayout.JAVA_SHORT.byteSize();
     }
 
-    @Override
-    public long getAddress() {
-        return pointerSegment.address();
-    }
-
-    @Override
-    public MemorySegment getNativeSegment() {
-        return pointerSegment;
-    }
 }

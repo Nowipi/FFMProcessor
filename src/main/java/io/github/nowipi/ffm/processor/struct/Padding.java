@@ -1,4 +1,4 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.struct;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.StructLayout;

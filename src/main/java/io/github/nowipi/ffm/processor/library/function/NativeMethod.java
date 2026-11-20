@@ -1,13 +1,14 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.library.function;
 
 import io.github.nowipi.ffm.processor.annotations.Function;
+import io.github.nowipi.ffm.processor.library.NativeLibrary;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeKind;
 import java.util.stream.Collectors;
 
-sealed class NativeMethod extends NativeFunction permits CapturingNativeMethod {
+sealed public class NativeMethod extends NativeFunction permits CapturingNativeMethod {
 
     public NativeMethod(NativeLibrary library, Function annotation, ExecutableElement javaDeclaration, ProcessingEnvironment env) {
         super(library, annotation, javaDeclaration, env);

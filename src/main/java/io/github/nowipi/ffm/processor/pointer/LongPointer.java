@@ -4,11 +4,10 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
-public class LongPointer implements Pointer<Long> {
-    private MemorySegment pointerSegment;
+public class LongPointer extends VoidPointer implements Pointer<Long> {
 
     public LongPointer(MemorySegment pointerSegment) {
-        this.pointerSegment = pointerSegment;
+        super(pointerSegment);
     }
 
     public LongPointer(Arena arena, long... values) {
@@ -28,11 +27,6 @@ public class LongPointer implements Pointer<Long> {
     }
 
     @Override
-    public Long getAtIndex(long index) {
-        return get(ValueLayout.JAVA_LONG.byteSize() * index);
-    }
-
-    @Override
     public void set(long offset, Long value) {
         if (offset >= pointerSegment.byteSize()) {
             growViewSize();
@@ -41,22 +35,9 @@ public class LongPointer implements Pointer<Long> {
     }
 
     @Override
-    public void setAtIndex(long index, Long value) {
-        set(ValueLayout.JAVA_LONG.byteSize() * index, value);
-    }
-
-    @Override
     public long getByteSize() {
         return ValueLayout.JAVA_LONG.byteSize();
     }
 
-    @Override
-    public long getAddress() {
-        return pointerSegment.address();
-    }
 
-    @Override
-    public MemorySegment getNativeSegment() {
-        return pointerSegment;
-    }
 }

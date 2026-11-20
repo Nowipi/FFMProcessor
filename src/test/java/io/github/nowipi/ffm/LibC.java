@@ -7,6 +7,7 @@ import io.github.nowipi.ffm.processor.annotations.CaptureState;
 import io.github.nowipi.ffm.processor.annotations.Function;
 import io.github.nowipi.ffm.processor.annotations.Library;
 import io.github.nowipi.ffm.processor.pointer.Pointer;
+import io.github.nowipi.ffm.processor.pointer.VoidPointer;
 
 @Library
 public interface LibC {
@@ -16,7 +17,7 @@ public interface LibC {
 
     @Capture("errno")
     @Function(value = "fopen")
-    Pointer<Void> fopen(Pointer<Byte> filename, Pointer<Byte> mode);
+    VoidPointer fopen(Pointer<Byte> filename, Pointer<Byte> mode);
 
     @Function(value = "strerror")
     Pointer<Byte> strerror(int errnum);

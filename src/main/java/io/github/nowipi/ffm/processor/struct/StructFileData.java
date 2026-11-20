@@ -1,4 +1,4 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.struct;
 
 import io.github.nowipi.ffm.processor.annotations.Struct;
 
@@ -44,7 +44,7 @@ public class StructFileData {
             return typeName;
         }
 
-        private static boolean isPointer(TypeMirror type, Types types, TypeMirror pointerClassType) {
+        private static boolean isType(TypeMirror type, Types types, TypeMirror pointerClassType) {
 
             if (type.getKind() != TypeKind.DECLARED) {
                 return false;
@@ -52,9 +52,17 @@ public class StructFileData {
             return types.isSubtype(types.erasure(type), types.erasure(pointerClassType));
         }
 
-        public static StructMember from(ExecutableElement element, Types types, Elements elements, TypeMirror pointerClassType) {
+        public static StructMember from(ExecutableElement element, Types types, Elements elements) {
+            TypeMirror pointerType = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.Pointer").asType();
+            TypeMirror voidPointerType = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.VoidPointer").asType();
+
             TypeMirror returnType = element.getReturnType();
-            if (isPointer(returnType, types, pointerClassType)) {
+
+            if (isType(returnType, types, voidPointerType)) {
+                return new VoidPointerMember(element);
+            }
+
+            if (isType(returnType, types, pointerType)) {
                 return new PointerMember(element, types, elements);
             }
 
@@ -97,11 +105,11 @@ public class StructFileData {
                     default -> throw new IllegalStateException("Unexpected value: " + genericType);
                 };
                 pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer." + ((DeclaredType)genericType).asElement().getSimpleName() + "Pointer";
-            } else if (types.isSameType(genericType, elements.getTypeElement("java.lang.Void").asType())) {
+            } else if (types.isSameType(functionElement.getReturnType(), elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.VoidPointer").asType())) {
                 pointerClassImplementation = "io.github.nowipi.ffm.processor.pointer.VoidPointer";
-                pointsToLayout = "ValueLayout.JAVA_BYTE";
+                pointsToLayout = "ValueLayout.ADDRESS";
             } else {
-                throw new IllegalArgumentException("Not a valid member " + functionElement);
+                throw new IllegalArgumentException("Not a valid member " + functionElement + " of type " + functionElement.getReturnType());
             }
 
             pointsToStruct = struct;
@@ -127,6 +135,18 @@ public class StructFileData {
 
         public String getPointsToTypeName() {
             return pointsToTypeName;
+        }
+    }
+
+    public static final class VoidPointerMember extends StructMember {
+
+        public VoidPointerMember(ExecutableElement functionElement) {
+            super(functionElement);
+        }
+
+        @Override
+        public String getLayout() {
+            return "ADDRESS";
         }
     }
 
@@ -178,7 +198,6 @@ public class StructFileData {
         }
 
         Elements elements = env.getElementUtils();
-        TypeMirror pointerType = elements.getTypeElement("io.github.nowipi.ffm.processor.pointer.Pointer").asType();
         Types types = env.getTypeUtils();
         packageName = elements.getPackageOf(annotatedElement).getQualifiedName().toString();
         className = annotation.value();
@@ -195,7 +214,7 @@ public class StructFileData {
                 throw new IllegalArgumentException("Function cannot have parameters " + functionElement.getEnclosingElement() + "#" + functionElement);
             }
 
-            members.add(StructMember.from(functionElement, types, elements, pointerType));
+            members.add(StructMember.from(functionElement, types, elements));
         }
     }
 

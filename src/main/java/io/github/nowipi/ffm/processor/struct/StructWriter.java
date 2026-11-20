@@ -1,8 +1,6 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.struct;
 
 import javax.annotation.processing.Filer;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
@@ -25,7 +23,7 @@ public class StructWriter {
     private void writeStructClass(JavaFileObject file) {
         try (Writer writer = file.openWriter()) {
             writer.write("package " + fileData.getPackageName() + ";\n\n");
-            writer.write("import java.lang.foreign.*;\nimport java.lang.invoke.MethodHandle;\nimport java.lang.invoke.VarHandle;\nimport static java.lang.foreign.ValueLayout.*;\n\n");
+            writer.write("import java.lang.foreign.*;\nimport java.lang.invoke.MethodHandle;\nimport java.lang.invoke.VarHandle;\nimport static java.lang.foreign.ValueLayout.*;\nimport io.github.nowipi.ffm.processor.pointer.VoidPointer;\n\n");
             writeClass(writer);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -75,7 +73,7 @@ public class StructWriter {
         writer.write("static {\n");
         writer.write("LAYOUT = ");
         if (fileData.isPadded()) {
-            writer.write("io.github.nowipi.ffm.processor.Padding.createPaddedLayout(\n");
+            writer.write("io.github.nowipi.ffm.processor.struct.Padding.createPaddedLayout(\n");
         } else {
             writer.write("MemoryLayout.structLayout(\n");
         }
@@ -159,6 +157,8 @@ public class StructWriter {
                         writer.write("::from, ");
                     }
 
+                } else if (member instanceof StructFileData.VoidPointerMember) {
+                    writer.write("new VoidPointer(");
                 }
                 writer.write("nativeSegment.get(");
                 writer.write(member.getLayout());
@@ -176,7 +176,7 @@ public class StructWriter {
                     writer.write(pointerMember.getPointsToLayout());
                 }
 
-                if (member instanceof StructFileData.PointerMember) {
+                if (member instanceof StructFileData.PointerMember || member instanceof StructFileData.VoidPointerMember) {
                     writer.write(")");
                 }
                 writer.write(";\n}\n");
@@ -211,10 +211,18 @@ public class StructWriter {
                 writer.write(member.getLayout());
                 writer.write(", ");
                 writer.write(member.getOffsetName());
-                writer.write(", ");
-                writer.write(member.getName());
-                if (member instanceof StructFileData.PointerMember) {
-                    writer.write(".getNativeSegment()");
+                boolean pointerMember = member instanceof StructFileData.PointerMember;
+                if (pointerMember) {
+                    writer.write(", ((VoidPointer)");
+                    writer.write(member.getName());
+                    writer.write(").getMemorySegment()");
+                } else if (member instanceof StructFileData.VoidPointerMember) {
+                    writer.write(", ");
+                    writer.write(member.getName());
+                    writer.write(".getMemorySegment()");
+                } else {
+                    writer.write(", ");
+                    writer.write(member.getName());
                 }
                 writer.write(");\n}\n");
             }

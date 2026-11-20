@@ -1,4 +1,4 @@
-package io.github.nowipi.ffm.processor;
+package io.github.nowipi.ffm.processor.library;
 
 import io.github.nowipi.ffm.processor.annotations.Library;
 

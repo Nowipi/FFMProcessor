@@ -4,11 +4,10 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
-public class FloatPointer implements Pointer<Float> {
-    private MemorySegment pointerSegment;
+public class FloatPointer extends VoidPointer implements Pointer<Float> {
 
     public FloatPointer(MemorySegment pointerSegment) {
-        this.pointerSegment = pointerSegment;
+        super(pointerSegment);
     }
 
     public FloatPointer(Arena arena, float... values) {
@@ -27,10 +26,6 @@ public class FloatPointer implements Pointer<Float> {
         return pointerSegment.get(ValueLayout.JAVA_FLOAT, offset);
     }
 
-    @Override
-    public Float getAtIndex(long index) {
-        return get(ValueLayout.JAVA_FLOAT.byteSize() * index);
-    }
 
     @Override
     public void set(long offset, Float value) {
@@ -40,10 +35,6 @@ public class FloatPointer implements Pointer<Float> {
         pointerSegment.set(ValueLayout.JAVA_FLOAT, offset, value);
     }
 
-    @Override
-    public void setAtIndex(long index, Float value) {
-        set(ValueLayout.JAVA_FLOAT.byteSize() * index, value);
-    }
 
     @Override
     public long getByteSize() {
@@ -55,8 +46,4 @@ public class FloatPointer implements Pointer<Float> {
         return pointerSegment.address();
     }
 
-    @Override
-    public MemorySegment getNativeSegment() {
-        return pointerSegment;
-    }
 }

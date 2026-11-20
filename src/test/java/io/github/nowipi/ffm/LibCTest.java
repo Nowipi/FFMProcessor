@@ -3,14 +3,13 @@ package io.github.nowipi.ffm;
 
 import io.github.nowipi.ffm.processor.pointer.BytePointer;
 import io.github.nowipi.ffm.processor.pointer.Pointer;
+import io.github.nowipi.ffm.processor.pointer.VoidPointer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
 import java.nio.charset.StandardCharsets;
 
-import static io.github.nowipi.ffm.processor.pointer.Pointer.NULL;
 
 final class LibCTest {
 
@@ -28,7 +27,7 @@ final class LibCTest {
     public void writeTest() {
         LibC libC = new LibCImpl();
         try(var arena = Arena.ofConfined()) {
-            Pointer<Void> file = libC.fopen(
+            VoidPointer file = libC.fopen(
                     new BytePointer(arena, "file-does-not-exist\0".getBytes(StandardCharsets.US_ASCII)),
                     new BytePointer(arena, "r\0".getBytes(StandardCharsets.US_ASCII)));
             if (file.getAddress() == 0) {
